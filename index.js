@@ -133,7 +133,18 @@ class Game {
     player.cards[ilist[0]] = this.stackCards.main.pop().flip();
     this.isStackFlipped = false;
   }
+
+  swapCardWithDiscard(player, ilist) {
+    card = self.stackCards.discard.pop().flip();
+    for (i of ilist) {
+      self.stackCards.discard.push(player.cards[i].flip());
+      player.cards[i] = null;
+    }
+    player.cards[ilist[0]] = card;
+    this.isDiscardStackTapped = false;
+  }
 }
+
 
 game = new Game();
 
