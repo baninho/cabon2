@@ -153,116 +153,8 @@ class Game extends React.Component {
 
   handleClick(i) {
     socket.emit('click', {i: i});
-    /*
-    if (this.state.isStackFlipped) {
-      if (i < 4) {
-        this.swapCardWithDraw(i);
-      } else {
-        this.discardDraw()
-      }
-    } else {
-      this.flipCard(i);
-    }
-    console.log('clicked ' + i);
-    */
   }
-/*
-  discardDraw() {
-    const stackCards = this.state.stackCards.slice();
 
-    stackCards[1].unshift(stackCards[0].shift());
-
-    this.setState({
-      stackCards: stackCards,
-      isStackFlipped: false,
-    });
-  }
-*/
-/*
-  swapCardWithDraw(i) {
-    const playerCards = this.state.playerCards.slice();
-    const stackCards = this.state.stackCards.slice();
-    
-    if (this.state.isDiscardStackTapped) {
-      let card = stackCards[1].shift().flip();
-      stackCards[1].unshift(playerCards[0][i].flip());
-      playerCards[0][i] = card;
-    } else {
-      stackCards[1].unshift(playerCards[0][i].flip());
-      playerCards[0][i] = stackCards[0].shift().flip();      
-    }
-
-    this.setState({
-      stackCards: stackCards,
-      playerCards: playerCards,
-      isStackFlipped: false,
-      isDiscardStackTapped: false,
-    });
-    console.log(this.state.stackCards)
-  }
-*/
-/*
-  flipCard(i) {
-    const playerCards = this.state.playerCards.slice();
-    const stackCards = this.state.stackCards.slice();
-    const players = this.state.players.slice();
-
-    if (i < 4) {
-      if (this.state.isGameStarted) return;
-
-      let cardsViewed = players[0].cardsViewed;
-      let card = playerCards[0][i];
-
-      if (cardsViewed.includes(card)) {
-        // try out socket
-        //socket.emit('json', {flip: 0})
-        //card.flip();
-      } else if (cardsViewed.length < 2) {
-        card.flip();
-        cardsViewed = cardsViewed.concat([card])
-      }
-
-      console.log(cardsViewed)
-      players[0].cardsViewed = cardsViewed;
-
-      this.setState({
-        playerCards: playerCards,
-        players: players,
-      });
-
-    } else if (i < 8) {
-
-      playerCards[1][i-4].flip();
-      this.setState({
-        playerCards: playerCards,
-      });
-
-    } else if (i === 8 && !this.state.isStackFlipped) {
-
-      stackCards[0][0].flip();
-      playerCards[0].forEach(card => {
-        if (card.value === card.label) card.flip();
-      });
-      this.setState({
-        stackCards: stackCards,
-        isStackFlipped: true,
-        isGameStarted: true,
-      });
-
-    } else {
-
-      playerCards[0].forEach(card => {
-        if (card.value === card.label) card.flip();
-      });
-      this.setState({
-        stackCards: stackCards,
-        isStackFlipped: true,
-        isGameStarted: true,
-        isDiscardStackTapped: true,
-      });
-    }
-  }
-*/
   startButton() {
     socket.send({button: 'start'})
   }
@@ -276,7 +168,6 @@ class Game extends React.Component {
 
     // populate Card arrays
     // TODO: move to server and fetch only for authorized viewing of cards
-    //fetch('/cabon/test').then(result => result.json()).then(data => this.setState({text: data.text}));
     const playerCards = this.state.playerCards.slice();
     const stackCards = this.state.stackCards.slice();
 
