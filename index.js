@@ -10,6 +10,16 @@ const io = new Server(server);
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
 
+Object.defineProperty(Array.prototype, 'shuffle', {
+  value: function() {
+      for (let i = this.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [this[i], this[j]] = [this[j], this[i]];
+      }
+      return this;
+  }
+});
+
 const GameState = Object.freeze({
 	NOT_STARTED: 0,
 	STARTED: 1,
@@ -33,7 +43,7 @@ class Card {
   }
 
   flip() {
-    this.label = (this.label === this.value) ? 'C' : this.value;
+    this.label = (this.label == this.value) ? 'C' : this.value;
     return this;
   }
 
@@ -51,6 +61,56 @@ class Player {
     this.score = 0;
   }
 }
+
+class Game {
+  constructor() {
+    this.id = '';
+    this.gameState = GameState.NOT_STARTED;
+    this.players = [];
+    this.stackCards = {};
+    this.isStackFlipped = false;
+    this.isDiscardStackTapped = false;
+    this.activePlayer = 0;
+    this.caboCaller = 0;
+    this.peek = false;
+    this.spy = false;
+    this.swap = false;
+    this.scores = [];
+    this.selectedCards = [];
+
+    this.restart();
+  }
+
+  restart() {
+    this.stackCards = {
+      main: Array(52).fill(1).map((v, i) => {return new Card(Math.floor(i/4 + 0.5))}),
+      discard: [],
+    };
+    this.stackCards.discard.push(this.stackCards.main.pop().flip());
+    for (let i = 0; i < this.players.length; i++) {
+      for (let j = 0; j < 4; j++) {
+        this.players[i].cards.push(this.stackCards.main.pop());
+        this.players[i].cardsViewed = [];
+      }
+    }
+    this.setState(GameState.NOT_STARTED);
+    this.isStackFlipped = false;
+    this.isDiscardStackTapped = false;
+    this.activePlayer = 0;
+    this.caboCaller = 0;
+    this.peek = false;
+    this.spy = false;
+    this.swap = false;
+    this.selectedCards = [];
+  }
+
+  setState(state) {
+    this.gameState = state;
+    io.emit('game_state', {'state': this.gameState});
+  }
+}
+
+game = new Game();
 
 app.get('/test', (req, res) => {
   const count = 5;
@@ -71,6 +131,7 @@ app.get('*', (req, res) => {
 
 io.on('connection', (socket) => {
   console.log('a user connected with sid ' + socket.id);
+  socket.emit('game_state', {'state': game.gameState});
 });
 
 const port = process.env.PORT || 5000;
