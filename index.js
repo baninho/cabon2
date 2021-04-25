@@ -11,20 +11,36 @@ const io = new Server(server);
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 const GameState = Object.freeze({
-  NOT_STARTED: 0,
-  STARTED: 1,
-  CABO: 2,
-  FINAL_ROUND: 3,
-  FINISHED: 4,
-  name: {
-    0: 'NOT_STARTED',
-    1: 'STARTED',
-    2: 'CABO',
-    3: 'FINAL_ROUND',
-    4: 'FINISHED',
-  },
+	NOT_STARTED: 0,
+	STARTED: 1,
+	CABO: 2,
+	FINAL_ROUND: 3,
+	FINISHED: 4,
+	name: {
+		0: 'NOT_STARTED',
+		1: 'STARTED',
+		2: 'CABO',
+		3: 'FINAL_ROUND',
+		4: 'FINISHED',
+	},
 });
 
+class Card {
+  constructor(value) {
+    this.id = '';
+    this.value = value;
+    this.label = 'C';
+  }
+
+  flip() {
+    this.label = (this.label === this.value) ? 'C' : this.value;
+    return this;
+  }
+
+  isFaceUp() {
+    return this.label == this.value;
+  }
+}
 
 app.get('/test', (req, res) => {
   const count = 5;
