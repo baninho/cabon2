@@ -42,6 +42,16 @@ class Card {
   }
 }
 
+class Player {
+  constructor(id, name) {
+    this.id = id;
+    this.name = name;
+    this.cardsViewed = [];
+    this.cards = [];
+    this.score = 0;
+  }
+}
+
 app.get('/test', (req, res) => {
   const count = 5;
 
