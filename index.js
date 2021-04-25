@@ -37,7 +37,6 @@ const GameState = Object.freeze({
 
 class Card {
   constructor(value) {
-    this.id = '';
     this.value = value;
     this.label = 'C';
   }
@@ -87,10 +86,10 @@ class Game {
       discard: [],
     };
     this.stackCards.discard.push(this.stackCards.main.pop().flip());
-    for (let i = 0; i < this.players.length; i++) {
+    for (const p of this.players) {
+      p.cardsViewed = [];
       for (let j = 0; j < 4; j++) {
-        this.players[i].cards.push(this.stackCards.main.pop());
-        this.players[i].cardsViewed = [];
+        p.cards.push(this.stackCards.main.pop());
       }
     }
     this.setState(GameState.NOT_STARTED);
