@@ -2,9 +2,29 @@ const express = require('express');
 const path = require('path');
 
 const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
+
+const GameState = Object.freeze({
+  NOT_STARTED: 0,
+  STARTED: 1,
+  CABO: 2,
+  FINAL_ROUND: 3,
+  FINISHED: 4,
+  name: {
+    0: 'NOT_STARTED',
+    1: 'STARTED',
+    2: 'CABO',
+    3: 'FINAL_ROUND',
+    4: 'FINISHED',
+  },
+});
+
 
 app.get('/test', (req, res) => {
   const count = 5;
@@ -23,8 +43,12 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname+'/client/build/index.html'));
 });
 
-const port = process.env.PORT || 5000;
-app.listen(port);
+io.on('connection', (socket) => {
+  console.log('a user connected with sid ' + socket.id);
+});
 
-console.log(`listening on ${port}`);
+const port = process.env.PORT || 5000;
+server.listen(port, () => {
+  console.log('listening on :' + port);
+});
 
