@@ -3,6 +3,23 @@ import ReactDOM from 'react-dom';
 import { io } from 'socket.io-client';
 import './index.css';
 
+const GameState = Object.freeze({
+  STATE_NOT_RECEIVED: 255,
+  NOT_STARTED: 0,
+  STARTED: 1,
+  CABO: 2,
+  FINAL_ROUND: 3,
+  FINISHED: 4,
+  name: {
+    255: 'STATE_NOT_RECEIVED',
+    0: 'NOT_STARTED',
+    1: 'STARTED',
+    2: 'CABO',
+    3: 'FINAL_ROUND',
+    4: 'FINISHED',
+  },
+});
+
 function Card (props) {
   return (
     <button 
@@ -126,7 +143,7 @@ class Game extends React.Component {
       isStackFlipped: false,
       isGameStarted: false,
       isDiscardStackTapped: false,
-      gameState: 'STATE_NOT_RECEIVED',
+      gameState: GameState.STATE_NOT_RECEIVED,
       score: {
         yours: 0,
         theirs: 0,
@@ -341,7 +358,7 @@ class Game extends React.Component {
           />
         </div>
         <div className="game-info">
-          <div>{this.state.gameState}</div>
+          <div>{GameState.name[this.state.gameState]}</div>
           <div>Punkte:</div>
           <div>Du: {this.state.score.yours} Gegner: {this.state.score.theirs}</div>
           <button onClick={this.startButton}>New Game</button>
