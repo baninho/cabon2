@@ -20,6 +20,16 @@ Object.defineProperty(Array.prototype, 'shuffle', {
   }
 });
 
+Object.defineProperty(Array.prototype, 'sum', {
+  value: function() {
+    let sum = 0;
+    for (v of this) {
+      sum += v;
+    }
+    return sum;
+  }
+});
+
 const GameState = Object.freeze({
 	NOT_STARTED: 0,
 	STARTED: 1,
@@ -143,11 +153,44 @@ class Game {
     player.cards[ilist[0]] = card;
     this.isDiscardStackTapped = false;
   }
-  
+
   discardDraw() {
     this.stackCards.discard.push(this.stackCards.main.pop());
   }
 
+  endTurn() {
+    if (this.gameState === GameState.CABO) {
+      this.caboCaller = self.activePlayer;
+      this.setState(GameState.FINAL_ROUND);
+    }
+
+    this.activePlayer = (this.activePlayer+1) % this.players.length;
+
+    if (this.gameState === GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) self.endGame();
+  }
+
+  endGame() {
+    this.setState(GameState.FINISHED);
+    this.calculateScores();
+    // scores are sent through handleClick()
+  }
+
+  calculateScores() {
+    for (p of this.players) {
+      for (c of p.cards) {
+        this.scores[this.players.indexOf(p)] += c.value;
+      }
+    }
+  }
+
+  areCardsEqual() {
+    val = this.players[this.activePlayer].cards[this.selectedCards[0]].value;
+    for (i of this.selectedCards) {
+      if (val != this.players[this.activePlayer].cards[i].value) return false;
+    }
+
+    return true;
+  }
 }
 
 
