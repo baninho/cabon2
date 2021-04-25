@@ -124,6 +124,15 @@ class Game {
       }
     }
   }
+
+  swapCardWithDraw(player, ilist) {
+    for (i of ilist) {
+      this.stackCards.discard.push(player.cards[i].flip());
+      player.cards[i] = null;
+    }
+    player.cards[ilist[0]] = this.stackCards.main.pop().flip();
+    this.isStackFlipped = false;
+  }
 }
 
 game = new Game();
