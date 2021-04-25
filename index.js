@@ -143,6 +143,11 @@ class Game {
     player.cards[ilist[0]] = card;
     this.isDiscardStackTapped = false;
   }
+  
+  discardDraw() {
+    this.stackCards.discard.push(this.stackCards.main.pop());
+  }
+
 }
 
 
