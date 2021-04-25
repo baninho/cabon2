@@ -107,6 +107,23 @@ class Game {
     this.gameState = state;
     io.emit('game_state', {'state': this.gameState});
   }
+
+  startGame() {
+    if (this.gameState == GameState.NOT_STARTED) {
+      this.setState(GameState.STARTED);
+      for (p of this.players) {
+        for (c of p.cards) {
+          if (c.isFaceUp()) c.flip();
+        }
+      }
+      for (let i=0;i<4;i++) {
+        // TODO: this should be returned to caller and appended to messages that
+        // are sent to the room by the event handlers instead of broadcasting to 
+        // all clients
+        io.emit('game_event', {'i': i, 'label': 'C'});
+      }
+    }
+  }
 }
 
 game = new Game();
