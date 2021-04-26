@@ -193,7 +193,16 @@ class Game {
   }
 
   // TODO: getScoreMessage
+  getScoreMessage() {
+    return {
+      yours: this.scores[0],
+      theirs: this.scores[1],
+    }
+  }
   // TODO: handleClick
+  handleClick(i) {
+    console.log('clicked: ' + i);
+  }
 
 }
 
@@ -223,19 +232,29 @@ app.get('*', (req, res) => {
 io.on('connection', (socket) => {
   console.log('a user connected with sid ' + socket.id);
   let cards = []
+  
   for (let i=0;i<4;i++) cards.push(game.stackCards.main.pop())
+  
   game.players.push(new Player(socket.id, socket.id, cards));
   game.scores.push(0);
+  
   socket.emit('game_event', {
     i: 9, 
     label: game.stackCards.discard[game.stackCards.discard.length-1].label,
   });
+  
   socket.emit('game_state', {'state': game.gameState});
+  
   socket.on('message', (data) =>{
     socket.emit('debug', {received: 'message'});
     console.log('message received');
     console.log(data);
   });
+
+  // TODO: handle click on card
+  socket.on('click', (data) => {
+    handleClick(data.i);
+  })
 });
 
 
@@ -244,8 +263,6 @@ io.on('connection', (socket) => {
 
 // TODO: handle new game button
 // TODO: handle cabo button
-
-// TODO: handle click on card
 
 
 
