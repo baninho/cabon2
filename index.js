@@ -62,11 +62,11 @@ class Card {
 }
 
 class Player {
-  constructor(id, name) {
+  constructor(id, name, cards) {
     this.id = id;
     this.name = name;
     this.cardsViewed = [];
-    this.cards = [];
+    this.cards = cards;
     this.score = 0;
   }
 }
@@ -219,14 +219,13 @@ app.get('*', (req, res) => {
 // TODO: handle routing to specified game
 // TODO: handle create new game, actually creating new game and assigning an id
 
-// TODO: add player to game when they connect
+// add player to game when they connect
 io.on('connection', (socket) => {
   console.log('a user connected with sid ' + socket.id);
   let cards = []
   for (let i=0;i<4;i++) cards.push(game.stackCards.main.pop())
-  game.players.push(new Player(socket.id, socket.id));
+  game.players.push(new Player(socket.id, socket.id, cards));
   game.scores.push(0);
-  game.players[game.players.length-1].cards = cards;
   socket.emit('game_event', {
     i: 9, 
     label: game.stackCards.discard[game.stackCards.discard.length-1].label,
