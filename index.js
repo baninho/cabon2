@@ -284,9 +284,9 @@ io.on('connection', (socket) => {
 
   // TODO: handle click on card
   socket.on('click', (data) => {
-    console.log('clicked: ' + i);
+    console.log('clicked: ' + data.i);
     console.log('player sid: ' + socket.id);
-    
+
     responseData = game.handleClick(data.i, socket);
     socket.emit('game_event', responseData);
   });
