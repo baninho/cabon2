@@ -92,7 +92,7 @@ class Game {
 
   restart() {
     this.stackCards = {
-      main: Array(52).fill(1).map((v, i) => {return new Card(Math.floor(i/4 + 0.5))}),
+      main: Array(52).fill(1).map((v, i) => {return new Card(Math.floor(i/4 + 0.5))}).shuffle(),
       discard: [],
     };
     this.stackCards.discard.push(this.stackCards.main.pop().flip());
