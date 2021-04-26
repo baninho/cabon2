@@ -191,6 +191,10 @@ class Game {
 
     return true;
   }
+
+  // TODO: getScoreMessage
+  // TODO: handleClick
+
 }
 
 
@@ -201,7 +205,6 @@ app.get('/test', (req, res) => {
 
   const data = Array(count).fill('test')
 
-  // Return them as json
   res.json(data);
 
   console.log('Sent response');
@@ -213,10 +216,39 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname+'/client/build/index.html'));
 });
 
+// TODO: handle routing to specified game
+// TODO: handle create new game, actually creating new game and assigning an id
+
+// TODO: add player to game when they connect
 io.on('connection', (socket) => {
   console.log('a user connected with sid ' + socket.id);
+  let cards = []
+  for (let i=0;i<4;i++) cards.push(game.stackCards.main.pop())
+  game.players.push(new Player(socket.id, socket.id));
+  game.scores.push(0);
+  game.players[game.players.length-1].cards = cards;
+  socket.emit('game_event', {
+    i: 9, 
+    label: game.stackCards.discard[game.stackCards.discard.length-1].label,
+  });
   socket.emit('game_state', {'state': game.gameState});
+  socket.on('message', (data) =>{
+    socket.emit('debug', {received: 'message'});
+    console.log('message received');
+    console.log(data);
+  });
 });
+
+
+// TOOD: remove player from game when they disconnect
+// TODO: handle reconnects
+
+// TODO: handle new game button
+// TODO: handle cabo button
+
+// TODO: handle click on card
+
+
 
 const port = process.env.PORT || 5000;
 server.listen(port, () => {
