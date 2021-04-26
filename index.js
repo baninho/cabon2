@@ -23,7 +23,7 @@ Object.defineProperty(Array.prototype, 'shuffle', {
 Object.defineProperty(Array.prototype, 'sum', {
   value: function() {
     let sum = 0;
-    for (v of this) {
+    for (let v of this) {
       sum += v;
     }
     return sum;
@@ -121,8 +121,8 @@ class Game {
   startGame() {
     if (this.gameState == GameState.NOT_STARTED) {
       this.setState(GameState.STARTED);
-      for (p of this.players) {
-        for (c of p.cards) {
+      for (let p of this.players) {
+        for (let c of p.cards) {
           if (c.isFaceUp()) c.flip();
         }
       }
@@ -136,7 +136,7 @@ class Game {
   }
 
   swapCardWithDraw(player, ilist) {
-    for (i of ilist) {
+    for (let i of ilist) {
       this.stackCards.discard.push(player.cards[i].flip());
       player.cards[i] = null;
     }
@@ -146,7 +146,7 @@ class Game {
 
   swapCardWithDiscard(player, ilist) {
     card = self.stackCards.discard.pop().flip();
-    for (i of ilist) {
+    for (let i of ilist) {
       self.stackCards.discard.push(player.cards[i].flip());
       player.cards[i] = null;
     }
@@ -159,14 +159,14 @@ class Game {
   }
 
   endTurn() {
-    if (this.gameState === GameState.CABO) {
+    if (this.gameState == GameState.CABO) {
       this.caboCaller = self.activePlayer;
       this.setState(GameState.FINAL_ROUND);
     }
 
     this.activePlayer = (this.activePlayer+1) % this.players.length;
 
-    if (this.gameState === GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) self.endGame();
+    if (this.gameState == GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) self.endGame();
   }
 
   endGame() {
@@ -176,8 +176,8 @@ class Game {
   }
 
   calculateScores() {
-    for (p of this.players) {
-      for (c of p.cards) {
+    for (let p of this.players) {
+      for (let c of p.cards) {
         this.scores[this.players.indexOf(p)] += c.value;
       }
     }
@@ -185,7 +185,7 @@ class Game {
 
   areCardsEqual() {
     val = this.players[this.activePlayer].cards[this.selectedCards[0]].value;
-    for (i of this.selectedCards) {
+    for (let i of this.selectedCards) {
       if (val != this.players[this.activePlayer].cards[i].value) return false;
     }
 
@@ -200,8 +200,41 @@ class Game {
     }
   }
   // TODO: handleClick
-  handleClick(i) {
+  handleClick(i, socket) {
     console.log('clicked: ' + i);
+
+    let current_player;
+    let other_player;
+    let isActivePlayer;
+    let data = {};
+
+    for (let p of this.players) {
+      if (p.id === socket.id) current_player = p;
+      else other_player = p; // TODO: adapt this for more than one player
+    }
+
+    isActivePlayer = this.players.indexOf(current_player) === this.activePlayer;
+
+    if (!isActivePlayer && this.gameState == GameState.NOT_STARTED) return data;
+
+    if (i<4) {
+      // The player clicked one of their cards
+
+      // Check if he still has a card in that spot
+      if (!current_player.cards[i]) return data;
+
+      // If they have a card and it is before the start of the game, flip it
+      // TODO: only allow two cards to be flipped
+      if (this.gameState == GameState.NOT_STARTED) {
+        current_player.cards[i].flip();
+        return {
+          i: i,
+          label: current_player.cards[i].label,
+        }
+      }
+    }
+    
+    return data;
   }
 
 }
@@ -253,7 +286,8 @@ io.on('connection', (socket) => {
 
   // TODO: handle click on card
   socket.on('click', (data) => {
-    game.handleClick(data.i);
+    responseData = game.handleClick(data.i, socket);
+    socket.emit('game_event', responseData);
   });
 
   // TODO: handle new game button
