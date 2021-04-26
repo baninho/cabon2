@@ -201,8 +201,6 @@ class Game {
   }
   // TODO: handleClick
   handleClick(i, socket) {
-    console.log('clicked: ' + i);
-
     let current_player;
     let other_player;
     let isActivePlayer;
@@ -215,7 +213,7 @@ class Game {
 
     isActivePlayer = this.players.indexOf(current_player) === this.activePlayer;
 
-    if (!isActivePlayer && this.gameState == GameState.NOT_STARTED) return data;
+    if (!isActivePlayer && this.gameState != GameState.NOT_STARTED) return data;
 
     if (i<4) {
       // The player clicked one of their cards
@@ -286,12 +284,26 @@ io.on('connection', (socket) => {
 
   // TODO: handle click on card
   socket.on('click', (data) => {
+    console.log('clicked: ' + i);
+    console.log('player sid: ' + socket.id);
+    
     responseData = game.handleClick(data.i, socket);
     socket.emit('game_event', responseData);
   });
 
   // TODO: handle new game button
   // TODO: handle cabo button
+
+  socket.on('disconnect', () => {
+    for (let p of game.players) {
+      if (p.id === socket.id) {
+        Array.prototype.push.apply(game.stackCards.main, p.cards);
+        game.scores.splice(game.players.indexOf(p), 1);
+        game.players.splice(game.players.indexOf(p), 1);
+        break;
+      }
+    }
+  });
 });
 
 
