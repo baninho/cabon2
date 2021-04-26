@@ -294,6 +294,7 @@ io.on('connection', (socket) => {
   // TODO: handle new game button
   // TODO: handle cabo button
 
+  // remove player from game when they disconnect
   socket.on('disconnect', () => {
     for (let p of game.players) {
       if (p.id === socket.id) {
@@ -306,10 +307,7 @@ io.on('connection', (socket) => {
   });
 });
 
-
-// TOOD: remove player from game when they disconnect
 // TODO: handle reconnects
-
 
 
 const port = process.env.PORT || 5000;
