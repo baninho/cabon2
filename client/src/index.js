@@ -220,6 +220,10 @@ class Game extends React.Component {
       });
     });
 
+    socket.on('debug', (data) => {
+      console.log(data);
+    });
+
     for (let i=0;i<4;i++) {
       playerCards[0][i] = new CardData('x' + i, 52, 'C');
       playerCards[1][i] = new CardData('x' + (4+i), 53, 'C');
