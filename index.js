@@ -253,16 +253,16 @@ io.on('connection', (socket) => {
 
   // TODO: handle click on card
   socket.on('click', (data) => {
-    handleClick(data.i);
-  })
+    game.handleClick(data.i);
+  });
+
+  // TODO: handle new game button
+  // TODO: handle cabo button
 });
 
 
 // TOOD: remove player from game when they disconnect
 // TODO: handle reconnects
-
-// TODO: handle new game button
-// TODO: handle cabo button
 
 
 
