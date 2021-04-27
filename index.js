@@ -144,7 +144,7 @@ class Game {
       for (let i=0;i<4;i++) {
         // TODO: this should be returned to caller and appended to messages that
         // are sent to the room by the event handlers instead of broadcasting to 
-        // all clients
+        // all clients -- revise the message handling in general
         io.emit('game_event', {'i': i, 'label': 'C'});
       }
     }
@@ -238,14 +238,14 @@ class Game {
     return true;
   }
 
-  // TODO: getScoreMessage
   getScoreMessage() {
     return {
       yours: this.scores[0],
       theirs: this.scores[1],
     }
   }
-  // TODO: handleClick
+  // all clicks on cards go through here
+  // TODO: Check if things can be separated out into other functions
   handleClick(i, socket) {
     let current_player;
     let other_player;
@@ -363,8 +363,7 @@ io.on('connection', (socket) => {
   
   socket.emit('game_state', {'state': game.gameState});
   
-  // TODO: handle new game button
-  // TODO: handle cabo button
+  // handle new game, cabo, next round buttons
   socket.on('message', (data) =>{
     socket.emit('debug', {received: 'message'});
     console.log('message received');
@@ -376,7 +375,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // TODO: handle click on card
+  // handle click on card
   socket.on('click', (data) => {
     console.log('clicked: ' + data.i);
     console.log('player sid: ' + socket.id);
