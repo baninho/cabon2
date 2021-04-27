@@ -113,6 +113,11 @@ class Game {
     this.spy = false;
     this.swap = false;
     this.selectedCards = [];
+
+    io.emit('game_event', {
+      i: 9, 
+      label: this.stackCards.discard[this.stackCards.discard.length-1].label,
+    })
   }
 
   setState(state) {
@@ -346,6 +351,10 @@ io.on('connection', (socket) => {
     socket.emit('debug', {received: 'message'});
     console.log('message received');
     console.log(data);
+    if (data.button) {
+      if (data.button === 'start') game.restart();
+      if (data.button === 'cabo' && socket === game.players[game.activePlayer].socket) game.setState(GameState.CABO);
+    }
   });
 
   // TODO: handle click on card
