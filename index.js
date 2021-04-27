@@ -179,7 +179,20 @@ class Game {
   endGame() {
     this.setState(GameState.FINISHED);
     this.calculateScores();
-    // scores are sent through handleClick()
+    for (let p of this.players) {
+      let theirs = [];
+
+      for (let q of this.players) {
+        if (p!==q) theirs.push(this.scores[this.players.indexOf(q)]);
+      }
+
+      let data = {
+        yours: this.scores[this.players.indexOf(p)],
+        theirs: thiers,
+      };
+
+      p.socket.emit('scores', data);
+    }
   }
 
   calculateScores() {
