@@ -116,6 +116,10 @@ class Game {
     this.selectedCards = [];
 
     for (let p of this.players) {
+      for (let i=0;i<4;i++) {
+        p.socket.emit('game_event', {i: i, label: p.cards[i].label});
+        p.socket.to(this.id).emit('game_event', {i: i+4, label: p.cards[i].label});
+      }
       p.socket.emit('game_event', {i: 8, label: 'C',});
       p.socket.emit('game_event', {
         i: 9, 
@@ -198,6 +202,7 @@ class Game {
     this.setState(GameState.FINISHED);
     this.calculateScores();
     this.sendScores();
+    this.revealAllCards();
   }
 
   calculateScores() {
@@ -243,12 +248,21 @@ class Game {
     return true;
   }
 
-  getScoreMessage() {
-    return {
-      yours: this.scores[0],
-      theirs: this.scores[1],
+  revealAllCards() {
+    for (let p of this.players) {
+      for (let c of p.cards) {
+        if (c !== null) c.flip();
+      }
+
+      for (let i=0;i<4;i++) {
+        if(p.cards[i] !== null) {
+          p.socket.emit('game_event', {i: i, label: p.cards[i].label});
+          p.socket.to(this.id).emit('game_event', {i: i+4, label: p.cards[i].label});
+        }
+      }
     }
   }
+
   // all clicks on cards go through here
   // TODO: Check if things can be separated out into other functions
   handleClick(i, socket) {
@@ -375,6 +389,7 @@ io.on('connection', (socket) => {
     }
   
     game = games[gameIds.indexOf(gameId)];
+    socket.join(game.id);
   
     let cards = []
     
