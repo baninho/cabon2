@@ -229,7 +229,7 @@ class Game {
       // The player clicked one of their cards
 
       // Check if he still has a card in that spot
-      if (!current_player.cards[i]) return data;
+      if (current_player.cards[i] === null) return data;
 
       // If they have a card and it is before the start of the game, flip it
       // only allow two cards to be flipped using cardsViewed
@@ -269,6 +269,11 @@ class Game {
       if (this.selectedCardInds && this.areCardsEqual()) {
         if (this.isStackFlipped) this.swapCardWithDraw(current_player);
         else this.swapCardWithDiscard(current_player);
+
+        for (let i=0;i<4;i++) {
+          current_player.socket.emit('game_event', {i: i, label: current_player.cards[i] === null ? '' : 'C'})
+          other_player.socket.emit('game_event', {i: i+4, label: current_player.cards[i] === null ? '' : 'C'})
+        }
       } else this.discardDraw();
 
       this.endTurn();
