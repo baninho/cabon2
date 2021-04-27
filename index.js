@@ -100,6 +100,7 @@ class Game {
     this.stackCards.discard.push(this.stackCards.main.pop().flip());
     for (const p of this.players) {
       p.cardsViewed = [];
+      p.cards = [];
       for (let j = 0; j < 4; j++) {
         p.cards.push(this.stackCards.main.pop());
       }
@@ -114,10 +115,11 @@ class Game {
     this.swap = false;
     this.selectedCards = [];
 
+    io.emit('game_event', {i: 8, label: 'C',});
     io.emit('game_event', {
       i: 9, 
       label: this.stackCards.discard[this.stackCards.discard.length-1].label,
-    })
+    });
   }
 
   setState(state) {
@@ -205,6 +207,8 @@ class Game {
       for (let c of p.cards) {
         this.scores[this.players.indexOf(p)] += c.value;
       }
+
+      if (this.scores[this.players.indexOf(p)] === 100) this.scores[this.players.indexOf(p)] = 50;
     }
   }
 
