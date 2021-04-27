@@ -157,7 +157,7 @@ class Game {
 
   swapCardWithDraw(player) {
     for (let i of this.selectedCardInds) {
-      this.stackCards.discard.push(player.cards[i]);
+      this.stackCards.discard.push(player.cards[i].flip());
       player.cards[i] = null;
     }
     player.cards[this.selectedCardInds[0]] = this.stackCards.main.pop().flip();
@@ -166,7 +166,7 @@ class Game {
   swapCardWithDiscard(player) {
     let card = this.stackCards.discard.pop().flip();
     for (let i of this.selectedCardInds) {
-      this.stackCards.discard.push(player.cards[i]);
+      this.stackCards.discard.push(player.cards[i].flip());
       player.cards[i] = null;
     }
     player.cards[this.selectedCardInds[0]] = card;
@@ -232,7 +232,7 @@ class Game {
   }
 
   areCardsEqual() {
-    if (undefined === this.selectedCardInds[0]) return false;
+    if (undefined === this.selectedCardInds[0]) return true;
 
     let val = this.players[this.activePlayer].cards[this.selectedCardInds[0]].value;
     
@@ -253,6 +253,7 @@ class Game {
   // TODO: Check if things can be separated out into other functions
   handleClick(i, socket) {
     if (this.players.length < 2) return [{}];
+
     let current_player;
     let other_player;
     let isActivePlayer;
@@ -280,19 +281,18 @@ class Game {
         if (current_player.cardsViewed.length < 2 || current_player.cardsViewed.includes(c)) {
           c.flip();
           if (!current_player.cardsViewed.includes(c)) current_player.cardsViewed.push(c);
-          data = [{
-            i: i,
-            label: c.label,
-          }];
+          data = [{i: i, label: c.label}];
         }
       } else if (this.isStackFlipped || this.isDiscardStackTapped) {
         // The game started, now we select cards to swap for the draw
         // TODO: If the drawn card is a Peek card, flip the first selected card
         // TODO: If a Swap was discarded, this will select the card to swap with
         // an opponents card
-        this.selectedCardInds.push(i);
-        current_player.cards[i].flip();
-        current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
+        if (this.areCardsEqual()) {
+          this.selectedCardInds.push(i);
+          if (!current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+          current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
+        }
       }
     } else if (i===8 && !this.isStackFlipped && !this.isDiscardStackTapped && isActivePlayer) {
       // This is the stack
@@ -310,12 +310,12 @@ class Game {
         return data;
       }
 
-      if (this.selectedCardInds && this.areCardsEqual()) {
+      if (this.selectedCardInds[0] !== undefined && this.areCardsEqual()) {
+        for (let i of this.selectedCardInds) if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+
         if (this.isStackFlipped) this.swapCardWithDraw(current_player);
         else this.swapCardWithDiscard(current_player);
       } else this.discardDraw();
-
-      for (let i of this.selectedCardInds) if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
 
       for (let i=0;i<4;i++) {
         current_player.socket.emit('game_event', {i: i, label: current_player.cards[i] === null ? '' : 'C'})
