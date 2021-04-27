@@ -74,8 +74,8 @@ class Player {
 }
 
 class Game {
-  constructor() {
-    this.id = '';
+  constructor(id) {
+    this.id = id;
     this.gameState = GameState.NOT_STARTED;
     this.players = [];
     this.stackCards = {};
@@ -115,11 +115,15 @@ class Game {
     this.swap = false;
     this.selectedCards = [];
 
-    io.emit('game_event', {i: 8, label: 'C',});
-    io.emit('game_event', {
-      i: 9, 
-      label: this.stackCards.discard[this.stackCards.discard.length-1].label,
-    });
+    for (let p of this.players) {
+      p.socket.emit('game_event', {i: 8, label: 'C',});
+      p.socket.emit('game_event', {
+        i: 9, 
+        label: this.stackCards.discard[this.stackCards.discard.length-1].label,
+      });
+    }
+
+
   }
 
   newGame() {
@@ -130,7 +134,8 @@ class Game {
 
   setState(state) {
     this.gameState = state;
-    io.emit('game_state', {'state': this.gameState});
+    
+    for (let p of this.players) p.socket.emit('game_state', {'state': this.gameState});
   }
 
   startGame() {
@@ -145,7 +150,7 @@ class Game {
         // TODO: this should be returned to caller and appended to messages that
         // are sent to the room by the event handlers instead of broadcasting to 
         // all clients -- revise the message handling in general
-        io.emit('game_event', {'i': i, 'label': 'C'});
+        for (let p of this.players) p.socket.emit('game_event', {'i': i, 'label': 'C'});
       }
     }
   }
@@ -173,7 +178,7 @@ class Game {
 
   discardCard(c) {
     this.stackCards.discard.push(c);
-    io.emit('game_event', {i: 9, label: c.label});
+    for (let p of this.players) p.socket.emit('game_event', {i: 9, label: c.label});
   }
 
   endTurn() {
@@ -247,6 +252,7 @@ class Game {
   // all clicks on cards go through here
   // TODO: Check if things can be separated out into other functions
   handleClick(i, socket) {
+    if (this.players.length < 2) return [{}];
     let current_player;
     let other_player;
     let isActivePlayer;
@@ -316,7 +322,9 @@ class Game {
       this.selectedCardInds = [];
       
       data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
-      io.emit('game_event', {i: 9, label: this.stackCards.discard[this.stackCards.discard.length -1].label})
+      for (let p of this.players) {
+        p.socket.emit('game_event', {i: 9, label: this.stackCards.discard[this.stackCards.discard.length -1].label});
+      }
     }
     
     return data;
@@ -325,7 +333,7 @@ class Game {
 }
 
 
-game = new Game();
+const games = [];
 
 app.get('/test', (req, res) => {
   const count = 5;
@@ -349,19 +357,36 @@ app.get('*', (req, res) => {
 // add player to game when they connect
 io.on('connection', (socket) => {
   console.log('a user connected with sid ' + socket.id);
-  let cards = []
+
+  let game;
+  let gameIds = games.map((game) => game.id);
+
+  socket.on('url', (data) => {
+    
+    let gameId = path.basename(data.url);
+    console.log(gameId);
+    if (!gameIds.includes(gameId)) {
+      console.log('pushing game id ' + gameId);
+      games.push(new Game(gameId));
+      gameIds = games.map((game) => {return game.id});
+    }
   
-  for (let i=0;i<4;i++) cards.push(game.stackCards.main.pop())
+    game = games[gameIds.indexOf(gameId)];
   
-  game.players.push(new Player(socket.id, socket.id, cards, socket));
-  game.scores.push(0);
-  
-  socket.emit('game_event', {
-    i: 9, 
-    label: game.stackCards.discard[game.stackCards.discard.length-1].label,
+    let cards = []
+    
+    for (let i=0;i<4;i++) cards.push(game.stackCards.main.pop());
+    
+    game.players.push(new Player(socket.id, socket.id, cards, socket));
+    game.scores.push(0);
+    
+    socket.emit('game_event', {
+      i: 9, 
+      label: game.stackCards.discard[game.stackCards.discard.length-1].label,
+    });
+    
+    socket.emit('game_state', {'state': game.gameState});
   });
-  
-  socket.emit('game_state', {'state': game.gameState});
   
   // handle new game, cabo, next round buttons
   socket.on('message', (data) =>{
@@ -396,6 +421,8 @@ io.on('connection', (socket) => {
         break;
       }
     }
+
+    if (game.players.length === 0) games.splice(games.indexOf(game), 1);
   });
 });
 

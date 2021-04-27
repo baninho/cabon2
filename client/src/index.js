@@ -176,7 +176,7 @@ class Game extends React.Component {
     const stackCards = this.state.stackCards.slice();
 
     socket.on('connect', () => {
-      socket.send({
+      socket.emit('url', {
         url: window.location.href,
       });
     });
