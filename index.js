@@ -203,7 +203,7 @@ class Game {
   calculateScores() {
     for (let p of this.players) {
       for (let c of p.cards) {
-        this.scores[this.players.indexOf(p)] += c.value;
+        if (c !== null) this.scores[this.players.indexOf(p)] += c.value;
       }
 
       if (this.scores[this.players.indexOf(p)] === 100) this.scores[this.players.indexOf(p)] = 50;
