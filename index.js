@@ -5,6 +5,7 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+const { is } = require('type-is');
 const io = new Server(server);
 
 // Serve static files from the React app
@@ -62,12 +63,13 @@ class Card {
 }
 
 class Player {
-  constructor(id, name, cards) {
+  constructor(id, name, cards, socket) {
     this.id = id;
     this.name = name;
     this.cardsViewed = [];
     this.cards = cards;
     this.score = 0;
+    this.socket = socket;
   }
 }
 
@@ -85,7 +87,7 @@ class Game {
     this.spy = false;
     this.swap = false;
     this.scores = [];
-    this.selectedCards = [];
+    this.selectedCardInds = [];
 
     this.restart();
   }
@@ -135,27 +137,30 @@ class Game {
     }
   }
 
-  swapCardWithDraw(player, ilist) {
-    for (let i of ilist) {
+  swapCardWithDraw(player) {
+    for (let i of this.selectedCardInds) {
       this.stackCards.discard.push(player.cards[i].flip());
       player.cards[i] = null;
     }
-    player.cards[ilist[0]] = this.stackCards.main.pop().flip();
-    this.isStackFlipped = false;
+    player.cards[this.selectedCardInds[0]] = this.stackCards.main.pop().flip();
   }
 
-  swapCardWithDiscard(player, ilist) {
-    card = self.stackCards.discard.pop().flip();
-    for (let i of ilist) {
-      self.stackCards.discard.push(player.cards[i].flip());
+  swapCardWithDiscard(player) {
+    let card = this.stackCards.discard.pop().flip();
+    for (let i of this.selectedCardInds) {
+      this.stackCards.discard.push(player.cards[i].flip());
       player.cards[i] = null;
     }
-    player.cards[ilist[0]] = card;
-    this.isDiscardStackTapped = false;
+    player.cards[this.selectedCardInds[0]] = card;
   }
 
   discardDraw() {
-    this.stackCards.discard.push(this.stackCards.main.pop());
+    this.discardCard(this.stackCards.main.pop());
+  }
+
+  discardCard(c) {
+    this.stackCards.discard.push(c);
+    io.emit('game_event', {i: 9, label: c.label});
   }
 
   endTurn() {
@@ -165,6 +170,8 @@ class Game {
     }
 
     this.activePlayer = (this.activePlayer+1) % this.players.length;
+    this.isStackFlipped = false;
+    this.isDiscardStackTapped = false;
 
     if (this.gameState == GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) self.endGame();
   }
@@ -184,8 +191,11 @@ class Game {
   }
 
   areCardsEqual() {
-    val = this.players[this.activePlayer].cards[this.selectedCards[0]].value;
-    for (let i of this.selectedCards) {
+    if (undefined === this.selectedCardInds[0]) return false;
+
+    let val = this.players[this.activePlayer].cards[this.selectedCardInds[0]].value;
+    
+    for (let i of this.selectedCardInds) {
       if (val != this.players[this.activePlayer].cards[i].value) return false;
     }
 
@@ -204,7 +214,7 @@ class Game {
     let current_player;
     let other_player;
     let isActivePlayer;
-    let data = {};
+    let data = [{}];
 
     for (let p of this.players) {
       if (p.id === socket.id) current_player = p;
@@ -222,18 +232,50 @@ class Game {
       if (!current_player.cards[i]) return data;
 
       // If they have a card and it is before the start of the game, flip it
-      // TODO: only allow two cards to be flipped
+      // only allow two cards to be flipped using cardsViewed
       if (this.gameState == GameState.NOT_STARTED) {
         let c = current_player.cards[i];
         if (current_player.cardsViewed.length < 2 || current_player.cardsViewed.includes(c)) {
           c.flip();
           if (!current_player.cardsViewed.includes(c)) current_player.cardsViewed.push(c);
-          return {
+          data = [{
             i: i,
             label: c.label,
-          }
+          }];
         }
+      } else if (this.isStackFlipped || this.isDiscardStackTapped) {
+        // The game started, now we select cards to swap for the draw
+        // TODO: If the drawn card is a Peek card, flip the first selected card
+        // TODO: If a Swap was discarded, this will select the card to swap with
+        // an opponents card
+        this.selectedCardInds.push(i);
       }
+    } else if (i===8 && !this.isStackFlipped && !this.isDiscardStackTapped && isActivePlayer) {
+      // This is the stack
+      this.startGame();
+      this.isStackFlipped = true;
+      this.stackCards.main[this.stackCards.main.length -1].flip();
+
+      data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
+
+    } else if (i===9 && isActivePlayer) {
+      if (!this.isStackFlipped && !this.isDiscardStackTapped) {
+        this.startGame();
+        this.isDiscardStackTapped = true;
+
+        return data;
+      }
+
+      if (this.selectedCardInds && this.areCardsEqual()) {
+        if (this.isStackFlipped) this.swapCardWithDraw(current_player);
+        else this.swapCardWithDiscard(current_player);
+      } else this.discardDraw();
+
+      this.endTurn();
+      this.selectedCardInds = [];
+      
+      data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
+      io.emit('game_event', {i: 9, label: this.stackCards.discard[this.stackCards.discard.length -1].label})
     }
     
     return data;
@@ -270,7 +312,7 @@ io.on('connection', (socket) => {
   
   for (let i=0;i<4;i++) cards.push(game.stackCards.main.pop())
   
-  game.players.push(new Player(socket.id, socket.id, cards));
+  game.players.push(new Player(socket.id, socket.id, cards, socket));
   game.scores.push(0);
   
   socket.emit('game_event', {
@@ -280,6 +322,8 @@ io.on('connection', (socket) => {
   
   socket.emit('game_state', {'state': game.gameState});
   
+  // TODO: handle new game button
+  // TODO: handle cabo button
   socket.on('message', (data) =>{
     socket.emit('debug', {received: 'message'});
     console.log('message received');
@@ -292,11 +336,10 @@ io.on('connection', (socket) => {
     console.log('player sid: ' + socket.id);
 
     responseData = game.handleClick(data.i, socket);
-    socket.emit('game_event', responseData);
+    for (d of responseData) socket.emit('game_event', d);
   });
 
-  // TODO: handle new game button
-  // TODO: handle cabo button
+
 
   // remove player from game when they disconnect
   socket.on('disconnect', () => {
