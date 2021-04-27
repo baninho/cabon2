@@ -54,8 +54,6 @@ module.exports = class Game {
         label: this.stackCards.discard[this.stackCards.discard.length-1].label,
       });
     }
-
-
   }
 
   newGame() {
