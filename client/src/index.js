@@ -163,6 +163,10 @@ class Game extends React.Component {
     socket.send({button: 'cabo'})
   }
 
+  newGameButton() {
+    socket.send({button: 'newgame'})
+  }
+
   componentDidMount() {
     document.title = 'Cabon'
 
@@ -256,8 +260,9 @@ class Game extends React.Component {
           <div>{GameState.name[this.state.gameState]}</div>
           <div>Punkte:</div>
           <div>Du: {this.state.score.yours} Gegner: {this.state.score.theirs}</div>
-          <button onClick={this.startButton}>New Game</button>
+          <button onClick={this.startButton}>Next Round</button>
           <button onClick={this.caboButton}>Cabo</button>
+          <button onClick={this.newGameButton}>New Game</button>
         </div>
       </div>
     );

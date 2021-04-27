@@ -122,6 +122,12 @@ class Game {
     });
   }
 
+  newGame() {
+    this.resetScores();
+    this.restart();
+    this.sendScores();
+  }
+
   setState(state) {
     this.gameState = state;
     io.emit('game_state', {'state': this.gameState});
@@ -186,6 +192,20 @@ class Game {
   endGame() {
     this.setState(GameState.FINISHED);
     this.calculateScores();
+    this.sendScores();
+  }
+
+  calculateScores() {
+    for (let p of this.players) {
+      for (let c of p.cards) {
+        this.scores[this.players.indexOf(p)] += c.value;
+      }
+
+      if (this.scores[this.players.indexOf(p)] === 100) this.scores[this.players.indexOf(p)] = 50;
+    }
+  }
+
+  sendScores() {
     for (let p of this.players) {
       let theirs = [];
 
@@ -202,14 +222,8 @@ class Game {
     }
   }
 
-  calculateScores() {
-    for (let p of this.players) {
-      for (let c of p.cards) {
-        this.scores[this.players.indexOf(p)] += c.value;
-      }
-
-      if (this.scores[this.players.indexOf(p)] === 100) this.scores[this.players.indexOf(p)] = 50;
-    }
+  resetScores() {
+    for (let i=0;i<this.scores.length;i++) this.scores[i] = 0;
   }
 
   areCardsEqual() {
@@ -356,6 +370,7 @@ io.on('connection', (socket) => {
     console.log('message received');
     console.log(data);
     if (data.button) {
+      if (data.button === 'newgame') game.newGame();
       if (data.button === 'start') game.restart();
       if (data.button === 'cabo' && socket === game.players[game.activePlayer].socket) game.setState(GameState.CABO);
     }
