@@ -120,7 +120,7 @@ class Game {
         p.socket.emit('game_event', {i: i, label: p.cards[i].label});
         p.socket.to(this.id).emit('game_event', {i: i+4, label: p.cards[i].label});
       }
-      p.socket.emit('game_event', {i: 8, label: 'C',});
+      p.socket.emit('game_event', {i: 8, label: 'C'});
       p.socket.emit('game_event', {
         i: 9, 
         label: this.stackCards.discard[this.stackCards.discard.length-1].label,
@@ -206,12 +206,21 @@ class Game {
   }
 
   calculateScores() {
+    let cabo; 
+
     for (let p of this.players) {
       for (let c of p.cards) {
         if (c !== null) this.scores[this.players.indexOf(p)] += c.value;
       }
 
+      if (this.caboCaller === this.players.indexOf(p)) cabo = this.scores[this.players.indexOf(p)];
+
       if (this.scores[this.players.indexOf(p)] === 100) this.scores[this.players.indexOf(p)] = 50;
+    }
+
+    for (let s of this.scores) if (cabo > s) {
+      this.scores[this.caboCaller] += 5;
+      return;
     }
   }
 
