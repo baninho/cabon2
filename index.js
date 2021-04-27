@@ -225,6 +225,7 @@ class Game {
   }
 
   sendScores() {
+    // TODO: Adapt for more than two players
     for (let p of this.players) {
       let theirs = [];
 
@@ -274,6 +275,7 @@ class Game {
 
   // all clicks on cards go through here
   // TODO: Check if things can be separated out into other functions
+  // TODO: Handle sending data in here instead of returning data
   handleClick(i, socket) {
     if (this.players.length < 2) return [{}];
 
@@ -360,16 +362,6 @@ class Game {
 
 
 const games = [];
-
-app.get('/test', (req, res) => {
-  const count = 5;
-
-  const data = Array(count).fill('test')
-
-  res.json(data);
-
-  console.log('Sent response');
-});
 
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
