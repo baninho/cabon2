@@ -170,7 +170,7 @@ class Game {
 
   endTurn() {
     if (this.gameState == GameState.CABO) {
-      this.caboCaller = self.activePlayer;
+      this.caboCaller = this.activePlayer;
       this.setState(GameState.FINAL_ROUND);
     }
 
@@ -178,7 +178,7 @@ class Game {
     this.isStackFlipped = false;
     this.isDiscardStackTapped = false;
 
-    if (this.gameState == GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) self.endGame();
+    if (this.gameState == GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) this.endGame();
   }
 
   endGame() {
@@ -193,7 +193,7 @@ class Game {
 
       let data = {
         yours: this.scores[this.players.indexOf(p)],
-        theirs: thiers,
+        theirs: theirs,
       };
 
       p.socket.emit('scores', data);
