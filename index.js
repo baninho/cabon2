@@ -224,10 +224,14 @@ class Game {
       // If they have a card and it is before the start of the game, flip it
       // TODO: only allow two cards to be flipped
       if (this.gameState == GameState.NOT_STARTED) {
-        current_player.cards[i].flip();
-        return {
-          i: i,
-          label: current_player.cards[i].label,
+        let c = current_player.cards[i];
+        if (current_player.cardsViewed.length < 2 || current_player.cardsViewed.includes(c)) {
+          c.flip();
+          if (!current_player.cardsViewed.includes(c)) current_player.cardsViewed.push(c);
+          return {
+            i: i,
+            label: c.label,
+          }
         }
       }
     }
