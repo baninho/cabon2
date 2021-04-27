@@ -157,7 +157,7 @@ class Game {
 
   swapCardWithDraw(player) {
     for (let i of this.selectedCardInds) {
-      this.stackCards.discard.push(player.cards[i].flip());
+      this.stackCards.discard.push(player.cards[i]);
       player.cards[i] = null;
     }
     player.cards[this.selectedCardInds[0]] = this.stackCards.main.pop().flip();
@@ -166,7 +166,7 @@ class Game {
   swapCardWithDiscard(player) {
     let card = this.stackCards.discard.pop().flip();
     for (let i of this.selectedCardInds) {
-      this.stackCards.discard.push(player.cards[i].flip());
+      this.stackCards.discard.push(player.cards[i]);
       player.cards[i] = null;
     }
     player.cards[this.selectedCardInds[0]] = card;
@@ -291,6 +291,8 @@ class Game {
         // TODO: If a Swap was discarded, this will select the card to swap with
         // an opponents card
         this.selectedCardInds.push(i);
+        current_player.cards[i].flip();
+        current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
       }
     } else if (i===8 && !this.isStackFlipped && !this.isDiscardStackTapped && isActivePlayer) {
       // This is the stack
@@ -311,12 +313,14 @@ class Game {
       if (this.selectedCardInds && this.areCardsEqual()) {
         if (this.isStackFlipped) this.swapCardWithDraw(current_player);
         else this.swapCardWithDiscard(current_player);
-
-        for (let i=0;i<4;i++) {
-          current_player.socket.emit('game_event', {i: i, label: current_player.cards[i] === null ? '' : 'C'})
-          other_player.socket.emit('game_event', {i: i+4, label: current_player.cards[i] === null ? '' : 'C'})
-        }
       } else this.discardDraw();
+
+      for (let i of this.selectedCardInds) if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+
+      for (let i=0;i<4;i++) {
+        current_player.socket.emit('game_event', {i: i, label: current_player.cards[i] === null ? '' : 'C'})
+        other_player.socket.emit('game_event', {i: i+4, label: current_player.cards[i] === null ? '' : 'C'})
+      }
 
       this.endTurn();
       this.selectedCardInds = [];
@@ -329,7 +333,6 @@ class Game {
     
     return data;
   }
-
 }
 
 
