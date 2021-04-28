@@ -53,7 +53,7 @@ app.get('/game/', (req, res) => {
   res.redirect('/game/' + Math.random());
 });
 
-app.get('/', (req, res) => {
+app.get('/home/', (req, res) => {
   res.render('index', { title: 'Cabon' });
 });
 
