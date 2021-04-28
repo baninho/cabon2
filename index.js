@@ -57,6 +57,11 @@ app.get('/home/', (req, res) => {
   res.render('index', { title: 'Cabon' });
 });
 
+app.get('/', (req, res) => {
+  console.log('routing through /');
+  res.render('index', { title: 'Cabon' });
+});
+
 // TODO: handle routing to specified game
 // TODO: handle create new game, actually creating new game and assigning an id
 
