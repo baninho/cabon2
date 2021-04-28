@@ -11,6 +11,10 @@ const io = new Server(server);
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
 
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
+
 Object.defineProperty(Array.prototype, 'shuffle', {
   value: function() {
       for (let i = this.length - 1; i > 0; i--) {
@@ -47,6 +51,10 @@ app.get('/game/:id', (req, res) => {
 app.get('/game/', (req, res) => {
   console.log('routing through /game/');
   res.redirect('/game/' + Math.random());
+});
+
+app.get('/', (req, res) => {
+  res.render('index', { title: 'Cabon' });
 });
 
 // TODO: handle routing to specified game
