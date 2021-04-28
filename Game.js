@@ -132,21 +132,30 @@ module.exports = class Game {
   }
 
   calculateScores() {
-    let cabo; 
+    let cabo;
+    let min = 65535;
+    let caboLost = false;
 
     for (let p of this.players) {
       for (let c of p.cards) {
-        if (c !== null) this.scores[this.players.indexOf(p)] += c.value;
+        if (c !== null)  p.score += c.value;
       }
 
-      if (this.caboCaller === this.players.indexOf(p)) cabo = this.scores[this.players.indexOf(p)];
-
-      if (this.scores[this.players.indexOf(p)] === 100) this.scores[this.players.indexOf(p)] = 50;
+      if (this.caboCaller === this.players.indexOf(p)) cabo = p.score;
+      if (min > p.score) min = p.score;
     }
 
-    for (let s of this.scores) if (cabo > s) {
-      this.scores[this.caboCaller] += 5;
-      return;
+    if (cabo > min) {
+      this.scores[this.caboCaller] += 5 + cabo;
+      caboLost = true;
+    }
+
+    this.players[this.caboCaller].score = 0;
+
+    for (let p of this.players) {
+      if (min === p.score && caboLost) p.score = 0;
+      this.scores[this.players.indexOf(p)] += p.score;
+      p.score = 0;
     }
   }
 
