@@ -40,10 +40,12 @@ const games = [];
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 app.get('/game/:id', (req, res) => {
+  console.log('routing through game/id ' + req.params.id);
   res.sendFile(path.join(__dirname+'/client/build/index.html'));
 });
 
 app.get('/game/', (req, res) => {
+  console.log('routing through /game/');
   res.redirect('/game/' + Math.random());
 });
 
