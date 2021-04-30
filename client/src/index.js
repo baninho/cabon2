@@ -305,9 +305,9 @@ class Game extends React.Component {
           <div>{this.state.turn}</div>
           <div>Punkte:</div>
           <div>Du: {this.state.score.yours} Gegner: {this.state.score.theirs}</div>
-          <button onClick={this.startButton}>Next Round</button>
-          <button onClick={this.caboButton}>Cabo</button>
-          <button onClick={this.newGameButton}>New Game</button>
+          <div><button onClick={this.startButton}>Next Round</button></div>
+          <div><button onClick={this.caboButton}>Cabo</button></div>
+          <div><button onClick={this.newGameButton}>New Game</button></div>
         </div>
       </div>
     );
