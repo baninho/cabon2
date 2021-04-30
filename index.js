@@ -41,8 +41,7 @@ const Game = require('./Game');
 
 const games = [];
 
-// The "catchall" handler: for any request that doesn't
-// match one above, send back React's index.html file.
+
 app.get('/game/:id', (req, res) => {
   console.log('routing through game/id ' + req.params.id);
   res.sendFile(path.join(__dirname+'/client/build/index.html'));
@@ -61,9 +60,6 @@ app.get('/', (req, res) => {
   console.log('routing through /');
   res.render('index', { title: 'Cabon' });
 });
-
-// TODO: handle routing to specified game
-// TODO: handle create new game, actually creating new game and assigning an id
 
 // add player to game when they connect
 io.on('connection', (socket) => {
@@ -122,8 +118,6 @@ io.on('connection', (socket) => {
     responseData = game.handleClick(data.i, socket);
     for (d of responseData) socket.emit('game_event', d);
   });
-
-
 
   // remove player from game when they disconnect
   socket.on('disconnect', () => {
