@@ -196,7 +196,7 @@ module.exports = class Game {
   revealAllCards() {
     for (let p of this.players) {
       for (let c of p.cards) {
-        if (c !== null) c.flip();
+        if (c !== null && !c.isFaceUp()) c.flip();
       }
 
       for (let i=0;i<4;i++) {
