@@ -17,7 +17,7 @@ import C10 from './img/C10.png';
 import C11 from './img/C11.png';
 import C12 from './img/C12.png';
 import C13 from './img/C13.png';
-
+import Cx from './img/Cx.png'
 
 const GameState = Object.freeze({
   STATE_NOT_RECEIVED: 255,
@@ -206,6 +206,7 @@ class Game extends React.Component {
 
       switch (data.label) {
         case ('C'): img = C; break;
+        case ('Cx'): img = Cx; break;
         case (0): img = C0; break;
         case (1): img = C1; break;
         case (2): img = C2; break;

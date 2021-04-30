@@ -16,6 +16,7 @@ module.exports = class Game {
     this.swap = false;
     this.scores = [];
     this.selectedCardInds = [];
+    this.xCards = [];
 
     this.restart();
   }
@@ -41,6 +42,7 @@ module.exports = class Game {
     this.peek = false;
     this.spy = false;
     this.swap = false;
+    this.xCards = [];
 
     for (let p of this.players) {
       for (let i=0;i<4;i++) {
@@ -86,7 +88,7 @@ module.exports = class Game {
 
   swapCardWithDraw(player) {
     for (let i of this.selectedCardInds) {
-      this.stackCards.discard.push(player.cards[i].flip());
+      this.discardCard(player.cards[i].flip());
       player.cards[i] = null;
     }
     player.cards[this.selectedCardInds[0]] = this.stackCards.main.pop().flip();
@@ -95,7 +97,7 @@ module.exports = class Game {
   swapCardWithDiscard(player) {
     let card = this.stackCards.discard.pop().flip();
     for (let i of this.selectedCardInds) {
-      this.stackCards.discard.push(player.cards[i].flip());
+      this.discardCard(player.cards[i].flip());
       player.cards[i] = null;
     }
     player.cards[this.selectedCardInds[0]] = card;
@@ -106,6 +108,9 @@ module.exports = class Game {
     this.discardCard(c);
     if (c.value == 9 || c.value == 10) this.spy = true;
     if (c.value == 11 || c.value == 12) this.swap = true;
+    for (let p of this.players) p.socket.emit('game_event', {
+      i: 8, label: this.stackCards.main[this.stackCards.main.length-1].label
+    });
   }
 
   discardCard(c) {
@@ -237,6 +242,19 @@ module.exports = class Game {
       // Check if he still has a card in that spot
       if (current_player.cards[i] === null) return data;
 
+      if (this.swap) {
+        if (this.xCards[0] === undefined){
+          this.xCards[0] = current_player.cards[i];
+
+          if (this.xCards[1] !== undefined) {
+            this.swapCards(current_player, other_player);
+            this.endTurn(); 
+          }
+        }
+
+        return data;
+      }
+
       // If they have a card and it is before the start of the game, flip it
       // only allow two cards to be flipped using cardsViewed
       if (this.gameState == GameState.NOT_STARTED) {
@@ -278,6 +296,16 @@ module.exports = class Game {
       data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
     } else if (i===9 && isActivePlayer) {
+      // If this.swap is set, it was set when the card was discarded
+      // this is the second click here, indicating that they don't want to swap
+      if (this.swap) {
+        this.swap = false;
+        this.xCards = [];
+        this.endTurn();
+
+        return data;
+      }
+
       if (!this.isStackFlipped && !this.isDiscardStackTapped) {
         this.startGame();
         this.isDiscardStackTapped = true;
@@ -292,6 +320,11 @@ module.exports = class Game {
         else this.swapCardWithDiscard(current_player);
       } else this.discardDraw();
 
+      data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
+
+      // Now this.swap has been set by discardDraw()
+      if (this.swap) return data;
+
       for (let i=0;i<4;i++) {
         current_player.socket.emit('game_event', {i: i, label: current_player.cards[i] === null ? '' : 'C'})
         other_player.socket.emit('game_event', {i: i+4, label: current_player.cards[i] === null ? '' : 'C'})
@@ -299,13 +332,32 @@ module.exports = class Game {
 
       this.endTurn();
       this.selectedCardInds = [];
-      
-      data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
-      for (let p of this.players) {
-        p.socket.emit('game_event', {i: 9, label: this.stackCards.discard[this.stackCards.discard.length -1].label});
+
+    } else if (i<8 && this.swap && this.xCards[1] === undefined) {
+      this.xCards[1] = other_player.cards[i-4];
+
+      if (this.xCards[0] !== undefined) {
+        this.swapCards(current_player, other_player);
+        this.endTurn();
       }
     }
     
     return data;
+  }
+
+  swapCards(p0, p1) {
+    let i0 = p0.cards.indexOf(this.xCards[0]);
+    let i1 = p1.cards.indexOf(this.xCards[1]);
+    
+    p1.cards[i1] = this.xCards[0];
+    p0.cards[i0] = this.xCards[1];
+
+    p1.socket.emit('game_event', {i: i1, label: 'Cx'});
+    p1.socket.emit('game_event', {i: i0+4, label: 'Cx'});
+    p0.socket.emit('game_event', {i: i0, label: 'Cx'});
+    p0.socket.emit('game_event', {i: i1+4, label: 'Cx'});
+
+    this.swap = false;
+    this.xCards = [];
   }
 }
