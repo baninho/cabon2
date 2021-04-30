@@ -2,6 +2,22 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { io } from 'socket.io-client';
 import './index.css';
+import C from './img/C.png';
+import C0 from './img/C0.png';
+import C1 from './img/C1.png';
+import C2 from './img/C2.png';
+import C3 from './img/C3.png';
+import C4 from './img/C4.png';
+import C5 from './img/C5.png';
+import C6 from './img/C6.png';
+import C7 from './img/C7.png';
+import C8 from './img/C8.png';
+import C9 from './img/C9.png';
+import C10 from './img/C10.png';
+import C11 from './img/C11.png';
+import C12 from './img/C12.png';
+import C13 from './img/C13.png';
+
 
 const GameState = Object.freeze({
   STATE_NOT_RECEIVED: 255,
@@ -26,7 +42,7 @@ function Card (props) {
       className="square" 
       onClick={props.onClick}
     >
-      {props.label}
+      <img src={props.label} alt=""></img>
     </button>
     );
 }
@@ -127,7 +143,7 @@ class Board extends React.Component {
 
 class Game extends React.Component {
   constructor(props) {
-    let nullCard = new CardData(0,0,0);
+    let nullCard = new CardData(0,0,C);
 
     super(props);
     this.state = {
@@ -186,15 +202,35 @@ class Game extends React.Component {
       console.log(data);
       const playerCards = this.state.playerCards.slice();
       const stackCards = this.state.stackCards.slice();
+      let img;
+
+      switch (data.label) {
+        case ('C'): img = C; break;
+        case (0): img = C0; break;
+        case (1): img = C1; break;
+        case (2): img = C2; break;
+        case (3): img = C3; break;
+        case (4): img = C4; break;
+        case (5): img = C5; break;
+        case (6): img = C6; break;
+        case (7): img = C7; break;
+        case (8): img = C8; break;
+        case (9): img = C9; break;
+        case (10): img = C10; break;
+        case (11): img = C11; break;
+        case (12): img = C12; break;
+        case (13): img = C13; break;
+        default: break;
+      }
 
       if (data.i < 4) {
-        playerCards[0][data.i].label = data.label;
+        playerCards[0][data.i].label = img;
       } else if (data.i < 8) {
-        playerCards[1][data.i-4].label = data.label;
+        playerCards[1][data.i-4].label = img;
       } else if (data.i === 8) {
-        stackCards[0][0].label = data.label;
+        stackCards[0][0].label = img;
       } else if (data.i === 9) {
-        stackCards[1][0].label = data.label;
+        stackCards[1][0].label = img;
       }
 
       this.setState({
@@ -229,13 +265,13 @@ class Game extends React.Component {
     });
 
     for (let i=0;i<4;i++) {
-      playerCards[0][i] = new CardData('x' + i, 52, 'C');
-      playerCards[1][i] = new CardData('x' + (4+i), 53, 'C');
+      playerCards[0][i] = new CardData('x' + i, 52, C);
+      playerCards[1][i] = new CardData('x' + (4+i), 53, C);
     }
 
     for (let i=0;i<52;i++) {
-      stackCards[0][i] = new CardData('y' + i, i, 'C');
-      stackCards[1][i] = new CardData('z' + i, i+4, 'C');
+      stackCards[0][i] = new CardData('y' + i, i, C);
+      stackCards[1][i] = new CardData('z' + i, i+4, C);
     }
 
     this.setState({
