@@ -127,6 +127,7 @@ module.exports = class Game {
     
     this.isStackFlipped = false;
     this.isDiscardStackTapped = false;
+    this.peek = false;
 
     if (this.gameState == GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) this.endGame();
   }
@@ -281,7 +282,6 @@ module.exports = class Game {
           if (!current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
           current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
         } else if (this.selectedCardInds.length === 1 && this.peek) {
-          this.peek = false;
           if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
           current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
           this.selectedCardInds.pop();
