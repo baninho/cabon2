@@ -41,7 +41,6 @@ module.exports = class Game {
     this.peek = false;
     this.spy = false;
     this.swap = false;
-    this.selectedCards = [];
 
     for (let p of this.players) {
       for (let i=0;i<4;i++) {
@@ -103,7 +102,10 @@ module.exports = class Game {
   }
 
   discardDraw() {
-    this.discardCard(this.stackCards.main.pop());
+    let c = this.stackCards.main.pop();
+    this.discardCard(c);
+    if (c.value == 9 || c.value == 10) this.spy = true;
+    if (c.value == 11 || c.value == 12) this.swap = true;
   }
 
   discardCard(c) {
@@ -218,6 +220,7 @@ module.exports = class Game {
     let other_player;
     let isActivePlayer;
     let data = [{}];
+    let card;
 
     for (let p of this.players) {
       if (p.id === socket.id) current_player = p;
@@ -248,17 +251,29 @@ module.exports = class Game {
         // TODO: If the drawn card is a Peek card, flip the first selected card
         // TODO: If a Swap was discarded, this will select the card to swap with
         // an opponents card
-        if (this.areCardsEqual()) {
+        if (this.areCardsEqual() && !this.selectedCardInds.includes(i)) {
           this.selectedCardInds.push(i);
           if (!current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
           current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
+        } else if (this.selectedCardInds.length === 1 && this.peek) {
+          this.peek = false;
+          if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+          current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
+          this.selectedCardInds.pop();
+          this.discardDraw();
+          current_player.socket.emit('game_event', {
+            i: 8, label: this.stackCards.main[this.stackCards.main.length-1].label
+          });
+          this.endTurn();
         }
       }
     } else if (i===8 && !this.isStackFlipped && !this.isDiscardStackTapped && isActivePlayer) {
       // This is the stack
       this.startGame();
       this.isStackFlipped = true;
-      this.stackCards.main[this.stackCards.main.length -1].flip();
+      card = this.stackCards.main[this.stackCards.main.length -1].flip();
+
+      if (card.value == 7 || card.value == 8) this.peek = true;
 
       data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
