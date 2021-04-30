@@ -66,6 +66,7 @@ module.exports = class Game {
   }
 
   nextRound() {
+    if (this.gameState !== GameState.FINISHED) return;
     this.restart();
     this.activePlayer = (++this.pFirstTurn) % this.players.length;
     this.sendTurn();
