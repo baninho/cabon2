@@ -8,6 +8,12 @@ const { Server } = require("socket.io");
 const { is } = require('type-is');
 const io = new Server(server);
 
+const GameState = require('./GameState');
+const Player = require('./Player');
+const Game = require('./Game');
+
+const games = [];
+
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
 
@@ -34,12 +40,6 @@ Object.defineProperty(Array.prototype, 'sum', {
     return sum;
   }
 });
-
-const GameState = require('./GameState');
-const Player = require('./Player');
-const Game = require('./Game');
-
-const games = [];
 
 
 app.get('/game/:id', (req, res) => {
