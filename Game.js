@@ -263,6 +263,8 @@ module.exports = class Game {
       if (current_player.cards[i] === null) return data;
 
       if (this.swap) {
+        // If a Swap was discarded, this will select the card to swap with
+        // an opponents card; if an opponents card was already selected swaps them now
         if (this.xCards[0] === undefined){
           this.xCards[0] = current_player.cards[i];
 
@@ -279,28 +281,36 @@ module.exports = class Game {
       // only allow two cards to be flipped using cardsViewed
       if (this.gameState == GameState.NOT_STARTED) {
         let c = current_player.cards[i];
+
         if (current_player.cardsViewed.length < 2 || current_player.cardsViewed.includes(c)) {
           c.flip();
+
           if (!current_player.cardsViewed.includes(c)) current_player.cardsViewed.push(c);
+
           data = [{i: i, label: c.label}];
         }
       } else if (this.isStackFlipped || this.isDiscardStackTapped) {
         // The game started, now we select cards to swap for the draw
-        // TODO: If the drawn card is a Peek card, flip the first selected card
-        // TODO: If a Swap was discarded, this will select the card to swap with
-        // an opponents card
         if (this.areCardsEqual() && !this.selectedCardInds.includes(i)) {
           this.selectedCardInds.push(i);
+
           if (!current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+
           current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
+
         } else if (this.selectedCardInds.length === 1 && this.peek) {
+          // If the drawn card is a Peek card, flip the first selected card
           if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+
           current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
+
           this.selectedCardInds.pop();
           this.discardDraw();
+
           current_player.socket.emit('game_event', {
             i: 8, label: this.stackCards.main[this.stackCards.main.length-1].label
           });
+
           this.endTurn();
         }
       }
@@ -315,6 +325,9 @@ module.exports = class Game {
       data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
     } else if (i===9 && isActivePlayer) {
+      // Discard stack was already tapped but no player card has been selected, do nothing
+      if (this.isDiscardStackTapped && this.selectedCardInds[0] === undefined) return data;
+
       // If this.swap is set, it was set when the card was discarded
       // this is the second click here, indicating that they don't want to swap
       if (this.swap) {
@@ -325,6 +338,7 @@ module.exports = class Game {
         return data;
       }
 
+      // They selected the discard stack to draw from it
       if (!this.isStackFlipped && !this.isDiscardStackTapped) {
         this.startGame();
         this.isDiscardStackTapped = true;
@@ -333,10 +347,15 @@ module.exports = class Game {
       }
 
       if (this.selectedCardInds[0] !== undefined && this.areCardsEqual()) {
+        // Player has seleted at least one of their cards and they have equal value
+        // --> discard them and replace one with the drawn card
         for (let i of this.selectedCardInds) if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
 
+        // Handle if card came from stack or discard
         if (this.isStackFlipped) this.swapCardWithDraw(current_player);
         else this.swapCardWithDiscard(current_player);
+
+        // No player card was selected, card is directly discarded from stack
       } else this.discardDraw();
 
       data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
