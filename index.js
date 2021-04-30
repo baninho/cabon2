@@ -86,10 +86,11 @@ io.on('connection', (socket) => {
     socket.join(game.id);
   
     let cards = []
+    let p = new Player(socket.id, socket.id, cards, socket)
     
     for (let i=0;i<4;i++) cards.push(game.stackCards.main.pop());
     
-    game.players.push(new Player(socket.id, socket.id, cards, socket));
+    game.players.push(p);
     game.scores.push(0);
     
     socket.emit('game_event', {
@@ -98,6 +99,7 @@ io.on('connection', (socket) => {
     });
     
     socket.emit('game_state', {'state': game.gameState});
+    socket.emit('turn', {yours: game.activePlayer === game.players.indexOf(p) ? 1 : 0});
   });
   
   // handle new game, cabo, next round buttons

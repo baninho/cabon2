@@ -164,6 +164,7 @@ class Game extends React.Component {
         yours: 0,
         theirs: 0,
       },
+      turn: '',
     };
   }
 
@@ -261,6 +262,12 @@ class Game extends React.Component {
       });
     });
 
+    socket.on('turn', (data) => {
+      this.setState({
+        turn: data.yours ? 'Your turn' : '',
+      });
+    });
+
     socket.on('debug', (data) => {
       console.log(data);
     });
@@ -295,6 +302,7 @@ class Game extends React.Component {
         </div>
         <div className="game-info">
           <div>{GameState.name[this.state.gameState]}</div>
+          <div>{this.state.turn}</div>
           <div>Punkte:</div>
           <div>Du: {this.state.score.yours} Gegner: {this.state.score.theirs}</div>
           <button onClick={this.startButton}>Next Round</button>

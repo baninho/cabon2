@@ -123,12 +123,19 @@ module.exports = class Game {
       this.caboCaller = this.activePlayer;
       this.setState(GameState.FINAL_ROUND);
     }
-
-    this.activePlayer = (this.activePlayer+1) % this.players.length;
+    this.nextPlayer();
+    
     this.isStackFlipped = false;
     this.isDiscardStackTapped = false;
 
     if (this.gameState == GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) this.endGame();
+  }
+
+  nextPlayer() {
+    this.activePlayer = (this.activePlayer+1) % this.players.length;
+    for (let p of this.players) {
+      p.socket.emit('turn', {yours: this.activePlayer === this.players.indexOf(p) ? 1 : 0});
+    }
   }
 
   endGame() {
