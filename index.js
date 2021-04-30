@@ -44,7 +44,14 @@ const games = [];
 
 app.get('/game/:id', (req, res) => {
   console.log('routing through game/id ' + req.params.id);
-  res.sendFile(path.join(__dirname+'/client/build/index.html'));
+
+  let gameIds = games.map((game) => game.id);
+
+  if (gameIds.includes(req.params.id) && games[gameIds.indexOf(req.params.id)].players.length === 2) {
+    res.send('Game is full');
+  } else {
+    res.sendFile(path.join(__dirname+'/client/build/index.html'));
+  }
 });
 
 app.get('/game/', (req, res) => {
@@ -71,7 +78,9 @@ io.on('connection', (socket) => {
   socket.on('url', (data) => {
     
     let gameId = path.basename(data.url);
+
     console.log(gameId);
+
     if (!gameIds.includes(gameId)) {
       console.log('pushing game id ' + gameId);
       games.push(new Game(gameId));
