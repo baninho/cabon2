@@ -10,6 +10,7 @@ module.exports = class Game {
     this.isStackFlipped = false;
     this.isDiscardStackTapped = false;
     this.activePlayer = 0;
+    this.pFirstTurn = 0;
     this.caboCaller = 0;
     this.peek = false;
     this.spy = false;
@@ -61,6 +62,13 @@ module.exports = class Game {
     this.resetScores();
     this.restart();
     this.sendScores();
+    this.sendTurn();
+  }
+
+  nextRound() {
+    this.restart();
+    this.activePlayer = (++this.pFirstTurn) % this.players.length;
+    this.sendTurn();
   }
 
   setState(state) {
@@ -134,9 +142,7 @@ module.exports = class Game {
 
   nextPlayer() {
     this.activePlayer = (this.activePlayer+1) % this.players.length;
-    for (let p of this.players) {
-      p.socket.emit('turn', {yours: this.activePlayer === this.players.indexOf(p) ? 1 : 0});
-    }
+    this.sendTurn();
   }
 
   endGame() {
@@ -189,6 +195,12 @@ module.exports = class Game {
       };
 
       p.socket.emit('scores', data);
+    }
+  }
+
+  sendTurn() {
+    for (let p of this.players) {
+      p.socket.emit('turn', {yours: this.activePlayer === this.players.indexOf(p) ? 1 : 0});
     }
   }
 
