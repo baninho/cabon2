@@ -13,7 +13,7 @@ module.exports = class Game {
     this.pFirstTurn = 0;
     this.caboCaller = 0;
     this.peek = false;
-    this.spy = false;
+    this.spy = 0;
     this.swap = false;
     this.scores = [];
     this.selectedCardInds = [];
@@ -41,7 +41,7 @@ module.exports = class Game {
     this.activePlayer = 0;
     this.caboCaller = 0;
     this.peek = false;
-    this.spy = false;
+    this.spy = 0;
     this.swap = false;
     this.xCards = [];
 
@@ -70,6 +70,10 @@ module.exports = class Game {
     this.restart();
     this.activePlayer = (++this.pFirstTurn) % this.players.length;
     this.sendTurn();
+  }
+
+  cabo() {
+    if (this.gameState < GameState.CABO) this.setState(GameState.CABO);
   }
 
   setState(state) {
@@ -115,7 +119,7 @@ module.exports = class Game {
   discardDraw() {
     let c = this.stackCards.main.pop();
     this.discardCard(c);
-    if (c.value == 9 || c.value == 10) this.spy = true;
+    if (c.value == 9 || c.value == 10) this.spy = 1;
     if (c.value == 11 || c.value == 12) this.swap = true;
     for (let p of this.players) p.socket.emit('game_event', {
       i: 8, label: this.stackCards.main[this.stackCards.main.length-1].label
@@ -260,6 +264,9 @@ module.exports = class Game {
     if (i<4) {
       // The player clicked one of their cards
 
+      // If they are spying they can't perform any action on their cards
+      if (this.spy) return data;
+
       // Check if he still has a card in that spot
       if (current_player.cards[i] === null) return data;
 
@@ -327,6 +334,7 @@ module.exports = class Game {
 
     } else if (i===9 && isActivePlayer) {
       // Discard stack was already tapped but no player card has been selected, do nothing
+      // This will actually also catch this.spy
       if (this.isDiscardStackTapped && this.selectedCardInds[0] === undefined) return data;
 
       // If this.swap is set, it was set when the card was discarded
@@ -372,11 +380,25 @@ module.exports = class Game {
       this.endTurn();
       this.selectedCardInds = [];
 
-    } else if (i<8 && this.swap && this.xCards[1] === undefined) {
-      this.xCards[1] = other_player.cards[i-4];
+    } else if (i<8) {
+      if (this.swap && this.xCards[1] === undefined) {
+        this.xCards[1] = other_player.cards[i-4];
 
-      if (this.xCards[0] !== undefined) {
-        this.swapCards(current_player, other_player);
+        if (this.xCards[0] !== undefined) {
+          this.swapCards(current_player, other_player);
+          this.endTurn();
+        }
+
+      } else if (this.spy === 1) {
+        this.spy = 2;
+
+        current_player.socket.emit('game_event', {i: i-4, label: other_player.cards[i-4].flip().label});
+
+      } else if (this.spy === 2) {
+        this.spy = 0;
+
+        current_player.socket.emit('game_event', {i: i-4, label: other_player.cards[i-4].flip().label});
+
         this.endTurn();
       }
     }

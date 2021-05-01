@@ -115,7 +115,7 @@ io.on('connection', (socket) => {
     if (data.button) {
       if (data.button === 'newgame') game.newGame();
       if (data.button === 'start') game.nextRound();
-      if (data.button === 'cabo' && socket === game.players[game.activePlayer].socket) game.setState(GameState.CABO);
+      if (data.button === 'cabo' && socket === game.players[game.activePlayer].socket) game.cabo(); 
     }
   });
 
