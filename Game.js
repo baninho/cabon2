@@ -114,6 +114,7 @@ module.exports = class Game {
       this.discardCard(player.cards[i].flip());
       player.cards[i] = null;
     }
+    card.label = 'Cx';
     player.cards[this.selectedCardInds[0]] = card;
   }
 
@@ -352,7 +353,7 @@ module.exports = class Game {
       // They selected the discard stack to draw from it
       if (!this.isStackFlipped && !this.isDiscardStackTapped) {
         if (!this.startGame()) return data;
-        
+
         this.isDiscardStackTapped = true;
 
         return data;
@@ -376,8 +377,11 @@ module.exports = class Game {
       if (this.swap || this.spy) return data;
 
       for (let i=0;i<4;i++) {
-        current_player.socket.emit('game_event', {i: i, label: current_player.cards[i] === null ? '' : 'C'})
-        other_player.socket.emit('game_event', {i: i+4, label: current_player.cards[i] === null ? '' : 'C'})
+        let msg0 = {i: i, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
+        let msg1 = {i: i+4, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
+        
+        current_player.socket.emit('game_event', msg0);
+        other_player.socket.emit('game_event', msg1);
       }
 
       this.endTurn();
