@@ -379,7 +379,7 @@ module.exports = class Game {
       data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
       for (let i=0;i<4;i++) {
-        if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+        if (current_player.cards[i] !== null && current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
 
         let msg0 = {i: i, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
         let msg1 = {i: i+4, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
