@@ -91,9 +91,6 @@ module.exports = class Game {
         }
       }
       for (let i=0;i<4;i++) {
-        // TODO: this should be returned to caller and appended to messages that
-        // are sent to the room by the event handlers instead of broadcasting to 
-        // all clients -- revise the message handling in general
         for (let p of this.players) p.socket.emit('game_event', {'i': i, 'label': 'C'});
       }
     }
@@ -370,7 +367,7 @@ module.exports = class Game {
       data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
       // Now this.swap has been set by discardDraw()
-      if (this.swap) return data;
+      if (this.swap || this.spy) return data;
 
       for (let i=0;i<4;i++) {
         current_player.socket.emit('game_event', {i: i, label: current_player.cards[i] === null ? '' : 'C'})
@@ -392,12 +389,12 @@ module.exports = class Game {
       } else if (this.spy === 1) {
         this.spy = 2;
 
-        current_player.socket.emit('game_event', {i: i-4, label: other_player.cards[i-4].flip().label});
+        current_player.socket.emit('game_event', {i: i, label: other_player.cards[i-4].flip().label});
 
       } else if (this.spy === 2) {
         this.spy = 0;
 
-        current_player.socket.emit('game_event', {i: i-4, label: other_player.cards[i-4].flip().label});
+        current_player.socket.emit('game_event', {i: i, label: other_player.cards[i-4].flip().label});
 
         this.endTurn();
       }
