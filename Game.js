@@ -369,7 +369,7 @@ module.exports = class Game {
         else this.swapCardWithDiscard(current_player);
 
         // No player card was selected, card is directly discarded from stack
-      } else this.discardDraw();
+      } else if (this.isStackFlipped) this.discardDraw();
 
       data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
@@ -377,6 +377,8 @@ module.exports = class Game {
       if (this.swap || this.spy) return data;
 
       for (let i=0;i<4;i++) {
+        if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+
         let msg0 = {i: i, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
         let msg1 = {i: i+4, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
         
