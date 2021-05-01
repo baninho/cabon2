@@ -83,6 +83,8 @@ module.exports = class Game {
   }
 
   startGame() {
+    for (let p of this.players) if (p.cardsViewed.length < 2) return false;
+
     if (this.gameState == GameState.NOT_STARTED) {
       this.setState(GameState.STARTED);
       for (let p of this.players) {
@@ -94,6 +96,8 @@ module.exports = class Game {
         for (let p of this.players) p.socket.emit('game_event', {'i': i, 'label': 'C'});
       }
     }
+
+    return true;
   }
 
   swapCardWithDraw(player) {
@@ -321,7 +325,8 @@ module.exports = class Game {
       }
     } else if (i===8 && !this.isStackFlipped && !this.isDiscardStackTapped && isActivePlayer) {
       // This is the stack
-      this.startGame();
+      if (!this.startGame()) return data;
+
       this.isStackFlipped = true;
       card = this.stackCards.main[this.stackCards.main.length -1].flip();
 
@@ -346,7 +351,8 @@ module.exports = class Game {
 
       // They selected the discard stack to draw from it
       if (!this.isStackFlipped && !this.isDiscardStackTapped) {
-        this.startGame();
+        if (!this.startGame()) return data;
+        
         this.isDiscardStackTapped = true;
 
         return data;
