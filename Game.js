@@ -1,6 +1,10 @@
 const GameState = require('./GameState');
 const Card = require('./Card');
 
+const DRAW_IND = 24;
+const DISCARD_IND = 25;
+const CARD_SLOTS = 6;
+
 module.exports = class Game {
   constructor(id) {
     this.id = id;
@@ -50,9 +54,9 @@ module.exports = class Game {
         p.socket.emit('game_event', {i: i, label: p.cards[i].label});
         p.socket.to(this.id).emit('game_event', {i: i+4, label: p.cards[i].label});
       }
-      p.socket.emit('game_event', {i: 8, label: 'C'});
+      p.socket.emit('game_event', {i: DRAW_IND, label: 'C'});
       p.socket.emit('game_event', {
-        i: 9, 
+        i: DISCARD_IND, 
         label: this.stackCards.discard[this.stackCards.discard.length-1].label,
       });
     }
@@ -129,13 +133,13 @@ module.exports = class Game {
     }
 
     for (let p of this.players) p.socket.emit('game_event', {
-      i: 8, label: this.stackCards.main[this.stackCards.main.length-1].label
+      i: DRAW_IND, label: this.stackCards.main[this.stackCards.main.length-1].label
     });
   }
 
   discardCard(c) {
     this.stackCards.discard.push(c);
-    for (let p of this.players) p.socket.emit('game_event', {i: 9, label: c.label});
+    for (let p of this.players) p.socket.emit('game_event', {i: DISCARD_IND, label: c.label});
   }
 
   endTurn() {
@@ -238,7 +242,7 @@ module.exports = class Game {
         if (c !== null && !c.isFaceUp()) c.flip();
       }
 
-      for (let i=0;i<4;i++) {
+      for (let i=0;i<CARD_SLOTS;i++) {
         if(p.cards[i] !== null) {
           p.socket.emit('game_event', {i: i, label: p.cards[i].label});
           p.socket.to(this.id).emit('game_event', {i: i+4, label: p.cards[i].label});
@@ -323,13 +327,13 @@ module.exports = class Game {
           this.discardDraw();
 
           current_player.socket.emit('game_event', {
-            i: 8, label: this.stackCards.main[this.stackCards.main.length-1].label
+            i: DRAW_IND, label: this.stackCards.main[this.stackCards.main.length-1].label
           });
 
           this.endTurn();
         }
       }
-    } else if (i===8 && !this.isStackFlipped && !this.isDiscardStackTapped && isActivePlayer) {
+    } else if (i===DRAW_IND && !this.isStackFlipped && !this.isDiscardStackTapped && isActivePlayer) {
       // This is the stack
       if (!this.startGame()) return data;
 
@@ -338,9 +342,9 @@ module.exports = class Game {
 
       if (card.value == 7 || card.value == 8) this.peek = true;
 
-      data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
+      data = [{i: DRAW_IND, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
-    } else if (i===9 && isActivePlayer) {
+    } else if (i===DISCARD_IND && isActivePlayer) {
       // Discard stack was already tapped but no player card has been selected, do nothing
       // This will actually also catch this.spy
       if (this.isDiscardStackTapped && this.selectedCardInds[0] === undefined) return data;
@@ -376,13 +380,13 @@ module.exports = class Game {
         // No player card was selected, card is directly discarded from stack
       } else if (this.isStackFlipped) this.discardDraw();
 
-      data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
+      data = [{i: DRAW_IND, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
-      for (let i=0;i<4;i++) {
-        if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+      for (let i=0;i<CARD_SLOTS;i++) {
+        if (current_player.cards[i] !== null && current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
 
         let msg0 = {i: i, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
-        let msg1 = {i: i+4, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
+        let msg1 = {i: i+CARD_SLOTS, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
         
         current_player.socket.emit('game_event', msg0);
         other_player.socket.emit('game_event', msg1);
@@ -394,9 +398,9 @@ module.exports = class Game {
       this.endTurn();
       this.selectedCardInds = [];
 
-    } else if (i<8) {
+    } else if (i<DRAW_IND) {
       if (this.swap && this.xCards[1] === undefined) {
-        this.xCards[1] = other_player.cards[i-4];
+        this.xCards[1] = other_player.cards[i-CARD_SLOTS];
 
         if (this.xCards[0] !== undefined) {
           this.swapCards(current_player, other_player);
@@ -406,12 +410,12 @@ module.exports = class Game {
       } else if (this.spy === 1) {
         this.spy = 2;
 
-        current_player.socket.emit('game_event', {i: i, label: other_player.cards[i-4].flip().label});
+        current_player.socket.emit('game_event', {i: i, label: other_player.cards[i-CARD_SLOTS].flip().label});
 
       } else if (this.spy === 2) {
         this.spy = 0;
 
-        current_player.socket.emit('game_event', {i: i, label: other_player.cards[i-4].flip().label});
+        current_player.socket.emit('game_event', {i: i, label: other_player.cards[i-CARD_SLOTS].flip().label});
 
         this.endTurn();
       }
@@ -428,9 +432,9 @@ module.exports = class Game {
     p0.cards[i0] = this.xCards[1];
 
     p1.socket.emit('game_event', {i: i1, label: 'Cx'});
-    p1.socket.emit('game_event', {i: i0+4, label: 'Cx'});
+    p1.socket.emit('game_event', {i: i0+CARD_SLOTS, label: 'Cx'});
     p0.socket.emit('game_event', {i: i0, label: 'Cx'});
-    p0.socket.emit('game_event', {i: i1+4, label: 'Cx'});
+    p0.socket.emit('game_event', {i: i1+CARD_SLOTS, label: 'Cx'});
 
     this.swap = false;
     this.xCards = [];

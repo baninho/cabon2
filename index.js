@@ -12,6 +12,8 @@ const GameState = require('./GameState');
 const Player = require('./Player');
 const Game = require('./Game');
 
+const DISCARD_IND = 25;
+
 const games = [];
 
 // Serve static files from the React app
@@ -99,7 +101,7 @@ io.on('connection', (socket) => {
     game.scores.push(0);
     
     socket.emit('game_event', {
-      i: 9, 
+      i: DISCARD_IND, 
       label: game.stackCards.discard[game.stackCards.discard.length-1].label,
     });
     
