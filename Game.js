@@ -120,9 +120,14 @@ module.exports = class Game {
 
   discardDraw() {
     let c = this.stackCards.main.pop();
+    
     this.discardCard(c);
-    if (c.value == 9 || c.value == 10) this.spy = 1;
-    if (c.value == 11 || c.value == 12) this.swap = true;
+
+    if (this.selectedCardInds[0] === undefined) {
+      if (c.value == 9 || c.value == 10) this.spy = 1;
+      if (c.value == 11 || c.value == 12) this.swap = true;
+    }
+
     for (let p of this.players) p.socket.emit('game_event', {
       i: 8, label: this.stackCards.main[this.stackCards.main.length-1].label
     });
@@ -373,9 +378,6 @@ module.exports = class Game {
 
       data = [{i: 8, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
-      // Now this.swap has been set by discardDraw()
-      if (this.swap || this.spy) return data;
-
       for (let i=0;i<4;i++) {
         if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
 
@@ -385,6 +387,9 @@ module.exports = class Game {
         current_player.socket.emit('game_event', msg0);
         other_player.socket.emit('game_event', msg1);
       }
+
+      // Now this.swap has been set by discardDraw()
+      if (this.swap || this.spy) return data;
 
       this.endTurn();
       this.selectedCardInds = [];
