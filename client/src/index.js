@@ -165,6 +165,7 @@ class Game extends React.Component {
         theirs: 0,
       },
       turn: '',
+      caboButtonClass: 'control',
     };
   }
 
@@ -247,6 +248,7 @@ class Game extends React.Component {
 
       this.setState({
         gameState: data.state,
+        caboButtonClass: data.state >= GameState.CABO ? 'control cabo' : 'control',
       });
     });
 
@@ -301,7 +303,7 @@ class Game extends React.Component {
           />
         </div>
         <div className="game-info">
-          <div><button className="control" onClick={this.caboButton}>CABO</button></div>
+          <div><button className={this.state.caboButtonClass} onClick={this.caboButton}>CABO</button></div>
           <div><button className="control" onClick={this.startButton}>NEXT</button></div>
           <div><button className="control" onClick={this.newGameButton}>NEW</button></div>
           <div>{GameState.name[this.state.gameState]}</div>
