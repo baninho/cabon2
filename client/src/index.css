@@ -37,6 +37,30 @@ ol, ul {
   width: 64px;
 }
 
+.control {
+  background: #fff;
+  border: 2px solid #000;
+  float: left;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 34px;
+  height: 36px;
+  margin-right: -1px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  padding: 0;
+  text-align: center;
+  width: 120px;
+}
+
+.control:hover {
+  background-color: #ddd;
+}
+
+.control:active {
+  background-color: darkgray;
+}
+
 .square:focus {
   outline: none;
 }

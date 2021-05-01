@@ -301,13 +301,13 @@ class Game extends React.Component {
           />
         </div>
         <div className="game-info">
+          <div><button className="control" onClick={this.caboButton}>CABO</button></div>
+          <div><button className="control" onClick={this.startButton}>NEXT</button></div>
+          <div><button className="control" onClick={this.newGameButton}>NEW</button></div>
           <div>{GameState.name[this.state.gameState]}</div>
           <div>{this.state.turn}</div>
           <div>Punkte:</div>
           <div>Du: {this.state.score.yours} Gegner: {this.state.score.theirs}</div>
-          <div><button onClick={this.startButton}>Next Round</button></div>
-          <div><button onClick={this.caboButton}>Cabo</button></div>
-          <div><button onClick={this.newGameButton}>New Game</button></div>
         </div>
       </div>
     );
