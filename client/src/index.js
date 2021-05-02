@@ -210,7 +210,7 @@ class Game extends React.Component {
         case (11): img = C11; break;
         case (12): img = C12; break;
         case (13): img = C13; break;
-        default: break;
+        default: img = null; break;
       }
 
       if (data.i < CARD_SLOTS) {

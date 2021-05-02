@@ -35,9 +35,9 @@ module.exports = class Game {
     this.stackCards.discard.push(this.stackCards.main.pop().flip());
     for (const p of this.players) {
       p.cardsViewed = [];
-      p.cards = [];
-      for (let j = 0; j < 4; j++) {
-        p.cards.push(this.stackCards.main.pop());
+      p.cards = Array(CARD_SLOTS).fill(null);
+      for (let i = 0; i < 4; i++) {
+        p.cards[i] = this.stackCards.main.pop();
       }
     }
     this.setState(GameState.NOT_STARTED);
@@ -51,9 +51,10 @@ module.exports = class Game {
     this.xCards = [];
 
     for (let p of this.players) {
-      for (let i=0;i<4;i++) {
-        p.socket.emit('game_event', {i: i, label: p.cards[i].label});
-        p.socket.to(this.id).emit('game_event', {i: i+4, label: p.cards[i].label});
+      console.log(p.cards);
+      for (let i=0;i<CARD_SLOTS;i++) {
+        p.socket.emit('game_event', {i: i, label: p.cards[i] !== null? p.cards[i].label : null});
+        p.socket.to(this.id).emit('game_event', {i: i+CARD_SLOTS, label: p.cards[i] !== null? p.cards[i].label : null});
       }
       p.socket.emit('game_event', {i: DRAW_IND, label: 'C'});
       p.socket.emit('game_event', {
