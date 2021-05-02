@@ -8,9 +8,9 @@ const { Server } = require("socket.io");
 const { is } = require('type-is');
 const io = new Server(server);
 
-const GameState = require('./GameState');
-const Player = require('./Player');
 const Game = require('./Game');
+
+const DISCARD_IND = 25;
 
 const games = [];
 
@@ -88,23 +88,8 @@ io.on('connection', (socket) => {
     }
   
     game = games[gameIds.indexOf(gameId)];
+    game.addNewPlayer(socket);
     socket.join(game.id);
-  
-    let cards = []
-    let p = new Player(socket.id, socket.id, cards, socket)
-    
-    for (let i=0;i<4;i++) cards.push(game.stackCards.main.pop());
-    
-    game.players.push(p);
-    game.scores.push(0);
-    
-    socket.emit('game_event', {
-      i: 9, 
-      label: game.stackCards.discard[game.stackCards.discard.length-1].label,
-    });
-    
-    socket.emit('game_state', {'state': game.gameState});
-    socket.emit('turn', {yours: game.activePlayer === game.players.indexOf(p) ? 1 : 0});
   });
   
   // handle new game, cabo, next round buttons
@@ -132,6 +117,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     for (let p of game.players) {
       if (p.id === socket.id) {
+        p.cards.splice(p.cards.indexOf(null)) // TODO: Handle null values in the middle of the array
         Array.prototype.push.apply(game.stackCards.main, p.cards);
         game.scores.splice(game.players.indexOf(p), 1);
         game.players.splice(game.players.indexOf(p), 1);

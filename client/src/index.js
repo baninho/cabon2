@@ -19,6 +19,10 @@ import C12 from './img/C12.png';
 import C13 from './img/C13.png';
 import Cx from './img/Cx.png'
 
+const DRAW_IND = 24;
+const DISCARD_IND = 25;
+const CARD_SLOTS = 6;
+
 const GameState = Object.freeze({
   STATE_NOT_RECEIVED: 255,
   NOT_STARTED: 0,
@@ -54,19 +58,20 @@ class CardData {
 }
 
 class Stack extends React.Component {
-  renderCard(i) {
+  renderCard(i, iClick) {
     return (
       <Card 
         label={this.props.cards[i].label}
-        onClick ={ () => this.props.onClick(i+8) }
+        onClick ={ () => this.props.onClick(iClick) }
       />
     );
   }
   render() {
   return (
     <div>
-     {this.renderCard(0)}
-     {this.renderCard(1)}
+     {this.renderCard(0, DRAW_IND)}
+     {this.renderCard(1, DISCARD_IND)}
+     {this.renderCard(2, 255)}
     </div>
   );
   }
@@ -77,7 +82,7 @@ class PlayerArea extends React.Component {
     return (
       <Card 
         label={this.props.cards[i].label}
-        onClick ={ () => this.props.onClick(i+this.props.playerNumber*4) }
+        onClick ={ () => this.props.onClick(i+this.props.playerNumber*CARD_SLOTS) }
       />
     )
   }
@@ -88,10 +93,12 @@ class PlayerArea extends React.Component {
         <div>
          {this.renderCard(0)}
          {this.renderCard(1)}
+         {this.renderCard(4)}
         </div>
         <div>
          {this.renderCard(2)}
          {this.renderCard(3)}
+         {this.renderCard(5)}
         </div>
       </div>
     );
@@ -104,23 +111,23 @@ class Board extends React.Component {
 
     return (
       <div>
-        Gegenspieler
+        <div>Gegenspieler
         <PlayerArea 
           cards = {this.props.playerCards[1]}
           onClick = {this.props.onClick}
           playerNumber = {1}
-        />
-        Stack
+        /></div>
+        <div>Stack
         <Stack 
           cards = {this.props.stackCards}
           onClick = {this.props.onClick}
-        />
-        Deine Karten
+        /></div>
+        <div>Deine Karten
         <PlayerArea 
           cards = {this.props.playerCards[0]}
           onClick = {this.props.onClick}
           playerNumber = {0}
-        />
+        /></div>
       </div>
     );
   }
@@ -128,15 +135,16 @@ class Board extends React.Component {
 
 class Game extends React.Component {
   constructor(props) {
-    let nullCard = new CardData(C);
+    let nullCard = new CardData(null);
 
     super(props);
     this.state = {
       playerCards: [
-        Array(4).fill(nullCard),
-        Array(4).fill(nullCard),
+        Array(6).fill(nullCard),
+        Array(6).fill(nullCard),
       ],
       stackCards: [
+        nullCard,
         nullCard,
         nullCard,
       ],
@@ -205,13 +213,13 @@ class Game extends React.Component {
         default: break;
       }
 
-      if (data.i < 4) {
+      if (data.i < CARD_SLOTS) {
         playerCards[0][data.i].label = img;
-      } else if (data.i < 8) {
-        playerCards[1][data.i-4].label = img;
-      } else if (data.i === 8) {
+      } else if (data.i < DRAW_IND) {
+        playerCards[1][data.i-CARD_SLOTS].label = img;
+      } else if (data.i === DRAW_IND) {
         stackCards[0].label = img;
-      } else if (data.i === 9) {
+      } else if (data.i === DISCARD_IND) {
         stackCards[1].label = img;
       }
 
@@ -253,13 +261,14 @@ class Game extends React.Component {
       console.log(data);
     });
 
-    for (let i=0;i<4;i++) {
-      playerCards[0][i] = new CardData(C);
-      playerCards[1][i] = new CardData(C);
+    for (let i=0;i<6;i++) {
+      playerCards[0][i] = new CardData(i<4 ? C : null);
+      playerCards[1][i] = new CardData(i<4 ? C : null);
     }
 
     stackCards[0] = new CardData(C);
     stackCards[1] = new CardData(C);
+    stackCards[2] = new CardData(null);
 
     this.setState({
       playerCards: playerCards,
