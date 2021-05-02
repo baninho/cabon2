@@ -62,3 +62,6 @@ typings/
 
 # Mac OS X
 .DS_Store
+
+# Create-react-app build output
+client/build/
