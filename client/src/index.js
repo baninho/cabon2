@@ -261,13 +261,14 @@ class Game extends React.Component {
       console.log(data);
     });
 
-    for (let i=0;i<4;i++) {
-      playerCards[0][i] = new CardData(C);
-      playerCards[1][i] = new CardData(C);
+    for (let i=0;i<6;i++) {
+      playerCards[0][i] = new CardData(i<4 ? C : null);
+      playerCards[1][i] = new CardData(i<4 ? C : null);
     }
 
     stackCards[0] = new CardData(C);
     stackCards[1] = new CardData(C);
+    stackCards[2] = new CardData(null);
 
     this.setState({
       playerCards: playerCards,

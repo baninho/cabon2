@@ -1,5 +1,6 @@
 const GameState = require('./GameState');
 const Card = require('./Card');
+const Player = require('./Player');
 
 const DRAW_IND = 24;
 const DISCARD_IND = 25;
@@ -62,6 +63,26 @@ module.exports = class Game {
     }
   }
 
+  addNewPlayer(socket) {
+    let cards = [];
+    let p;
+    
+    for (let i=0;i<4;i++) cards.push(this.stackCards.main.pop());
+    cards.push(null, null);
+    p = new Player(socket.id, socket.id, cards, socket);
+
+    this.players.push(p);
+    this.scores.push(0);
+
+    socket.emit('game_event', {
+      i: DISCARD_IND, 
+      label: this.stackCards.discard[this.stackCards.discard.length-1].label,
+    });
+    
+    socket.emit('game_state', {'state': this.gameState});
+    socket.emit('turn', {yours: this.activePlayer === this.players.indexOf(p) ? 1 : 0});
+  }
+
   newGame() {
     this.resetScores();
     this.restart();
@@ -93,7 +114,7 @@ module.exports = class Game {
       this.setState(GameState.STARTED);
       for (let p of this.players) {
         for (let c of p.cards) {
-          if (c.isFaceUp()) c.flip();
+          if (c !== null && c.isFaceUp()) c.flip();
         }
       }
       for (let i=0;i<4;i++) {
@@ -140,6 +161,26 @@ module.exports = class Game {
   discardCard(c) {
     this.stackCards.discard.push(c);
     for (let p of this.players) p.socket.emit('game_event', {i: DISCARD_IND, label: c.label});
+  }
+
+  penaltyDraw(p) {
+    for (let i=0;i<CARD_SLOTS;i++) {
+      if (p.cards[i] === null) {
+        p.cards[i] = this.stackCards.main.pop().flip();
+        p.socket.emit('game_event', {i: i, label: p.cards[i].label});
+        break;
+      }
+    }
+  }
+
+  penaltyDiscard(p) {
+    for (let i=0;i<CARD_SLOTS;i++) {
+      if (p.cards[i] === null) {
+        p.cards[i] = this.stackCards.discard.pop().flip();
+        p.socket.emit('game_event', {i: i, label: p.cards[i].label});
+        break;
+      }
+    }
   }
 
   endTurn() {
@@ -245,7 +286,7 @@ module.exports = class Game {
       for (let i=0;i<CARD_SLOTS;i++) {
         if(p.cards[i] !== null) {
           p.socket.emit('game_event', {i: i, label: p.cards[i].label});
-          p.socket.to(this.id).emit('game_event', {i: i+4, label: p.cards[i].label});
+          p.socket.to(this.id).emit('game_event', {i: i+CARD_SLOTS, label: p.cards[i].label});
         }
       }
     }
@@ -272,7 +313,8 @@ module.exports = class Game {
 
     if (!isActivePlayer && this.gameState != GameState.NOT_STARTED) return data;
 
-    if (i<4) {
+    if (i<CARD_SLOTS) {
+      console.log(current_player.cards);
       // The player clicked one of their cards
 
       // If they are spying they can't perform any action on their cards
@@ -368,17 +410,24 @@ module.exports = class Game {
         return data;
       }
 
-      if (this.selectedCardInds[0] !== undefined && this.areCardsEqual()) {
-        // Player has seleted at least one of their cards and they have equal value
-        // --> discard them and replace one with the drawn card
-        for (let i of this.selectedCardInds) if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+      if (this.areCardsEqual()){
+        if (this.selectedCardInds[0] !== undefined) {
+          // Player has seleted at least one of their cards and they have equal value
+          // --> discard them and replace one with the drawn card
+          for (let i of this.selectedCardInds) if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+  
+          // Handle if card came from stack or discard
+          if (this.isStackFlipped) this.swapCardWithDraw(current_player);
+          else this.swapCardWithDiscard(current_player);
+  
+          // No player card was selected, card is directly discarded from stack
+        } else if (this.isStackFlipped) this.discardDraw();
+      } else {
+        // Selected cards were not equal, they must draw an extra card
+        if (this.isStackFlipped) this.penaltyDraw(current_player);
+        if (this.isDiscardStackTapped) this.penaltyDiscard(current_player);
+      }
 
-        // Handle if card came from stack or discard
-        if (this.isStackFlipped) this.swapCardWithDraw(current_player);
-        else this.swapCardWithDiscard(current_player);
-
-        // No player card was selected, card is directly discarded from stack
-      } else if (this.isStackFlipped) this.discardDraw();
 
       data = [{i: DRAW_IND, label: this.stackCards.main[this.stackCards.main.length -1].label}];
 
