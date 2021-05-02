@@ -31,12 +31,12 @@ ol, ul {
   font-size: 24px;
   font-weight: bold;
   line-height: 34px;
-  height: 80px;
+  height: 74px;
   margin-right: -1px;
   margin-top: -1px;
   padding: 0;
   text-align: center;
-  width: 64px;
+  width: 61px;
 }
 
 .control {
@@ -95,7 +95,7 @@ ol, ul {
   display: flex;
   flex-direction: column;
   align-self: center;
-  margin-left: 0px;
+  margin-left: 30px;
   width: 380px;
 }
 
