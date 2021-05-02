@@ -15,7 +15,7 @@ const DISCARD_IND = 25;
 const games = [];
 
 // Serve static files from the React app
-app.use(express.static(path.join(__dirname, 'client/build')));
+app.use('/static', express.static(path.join(__dirname, 'client/build/static')));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -57,10 +57,6 @@ app.get('/game/:id', (req, res) => {
 app.get('/game/', (req, res) => {
   console.log('routing through /game/');
   res.redirect('/game/' + Math.random());
-});
-
-app.get('/home/', (req, res) => {
-  res.render('index', { title: 'Cabon' });
 });
 
 app.get('/', (req, res) => {
