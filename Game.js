@@ -5,6 +5,7 @@ const Player = require('./Player');
 const DRAW_IND = 24;
 const DISCARD_IND = 25;
 const CARD_SLOTS = 6;
+const STARTING_CARDS = 4;
 
 module.exports = class Game {
   constructor(id) {
@@ -36,7 +37,7 @@ module.exports = class Game {
     for (const p of this.players) {
       p.cardsViewed = [];
       p.cards = Array(CARD_SLOTS).fill(null);
-      for (let i = 0; i < 4; i++) {
+      for (let i=0;i<STARTING_CARDS;i++) {
         p.cards[i] = this.stackCards.main.pop();
       }
     }
@@ -68,7 +69,7 @@ module.exports = class Game {
     let cards = [];
     let p;
     
-    for (let i=0;i<4;i++) cards.push(this.stackCards.main.pop());
+    for (let i=0;i<STARTING_CARDS;i++) cards.push(this.stackCards.main.pop());
     cards.push(null, null);
     p = new Player(socket.id, socket.id, cards, socket);
 
@@ -118,7 +119,8 @@ module.exports = class Game {
           if (c !== null && c.isFaceUp()) c.flip();
         }
       }
-      for (let i=0;i<4;i++) {
+      // TODO: refactor to just go through cards and send their labels
+      for (let i=0;i<STARTING_CARDS;i++) {
         for (let p of this.players) p.socket.emit('game_event', {'i': i, 'label': 'C'});
       }
     }
