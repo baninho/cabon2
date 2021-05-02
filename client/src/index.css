@@ -47,7 +47,8 @@ ol, ul {
   font-weight: bold;
   line-height: 34px;
   height: 36px;
-  margin-right: -1px;
+  margin-right: 15px;
+  margin-left: 0px;
   margin-top: 0px;
   margin-bottom: 10px;
   padding: 0;
@@ -63,8 +64,15 @@ ol, ul {
   background-color: darkgray;
 }
 
+.btn-inactive {
+  color: rgb(133, 133, 133);
+  border: 2px solid rgb(133, 133, 133);
+}
+
 .cabo {
   background-color:forestgreen;
+  color: #000;
+  border: 2px solid #000;
 }
 
 .square:focus {
@@ -77,9 +85,30 @@ ol, ul {
 
 .game {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  align-self: center;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font-weight: bold;
 }
 
 .game-info {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
   margin-left: 20px;
+  width: 400px;
+}
+
+.game-board {
+  display: flex;
+  flex-direction: row;
+  align-self: center;
+  font: 18px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+.board-area {
+  display: flex;
+  flex-direction: column;
+  margin-top: 15px;
+  align-self: center;
 }

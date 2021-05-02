@@ -71,7 +71,6 @@ class Stack extends React.Component {
     <div>
      {this.renderCard(0, DRAW_IND)}
      {this.renderCard(1, DISCARD_IND)}
-     {this.renderCard(2, 255)}
     </div>
   );
   }
@@ -93,11 +92,9 @@ class PlayerArea extends React.Component {
         <div>
          {this.renderCard(0)}
          {this.renderCard(1)}
-         {this.renderCard(4)}
-        </div>
-        <div>
          {this.renderCard(2)}
          {this.renderCard(3)}
+         {this.renderCard(4)}
          {this.renderCard(5)}
         </div>
       </div>
@@ -111,18 +108,18 @@ class Board extends React.Component {
 
     return (
       <div>
-        <div>Gegenspieler
+        <div className="board-area">Opponent
         <PlayerArea 
           cards = {this.props.playerCards[1]}
           onClick = {this.props.onClick}
           playerNumber = {1}
         /></div>
-        <div>Stack
+        <div className="board-area">Stack
         <Stack 
           cards = {this.props.stackCards}
           onClick = {this.props.onClick}
         /></div>
-        <div>Deine Karten
+        <div className="board-area">Your Cards
         <PlayerArea 
           cards = {this.props.playerCards[0]}
           onClick = {this.props.onClick}
@@ -280,21 +277,27 @@ class Game extends React.Component {
 
     return (
       <div className="game">
+        <div className="game-info">
+          <div><button className={this.state.turn === '' ? this.state.caboButtonClass + ' btn-inactive' : this.state.caboButtonClass} 
+            onClick={this.caboButton}>
+            CABO
+          </button>
+          <button 
+            className={this.state.gameState == GameState.FINISHED ? 'control' : 'control btn-inactive'} 
+            onClick={this.startButton}>
+            NEXT
+          </button>
+          <button className="control" onClick={this.newGameButton}>NEW</button></div>
+          <div>{GameState.name[this.state.gameState]} - {this.state.turn}</div><div>Scores:
+          Yours: {this.state.score.yours} - Opponent's: {this.state.score.theirs[0]} - 
+          {this.state.score.theirs[1]} - {this.state.score.theirs[2]}</div>
+        </div>
         <div className="game-board">
           <Board 
             playerCards = {this.state.playerCards}
             stackCards = {this.state.stackCards}
             onClick = {(i) => this.handleClick(i)}
           />
-        </div>
-        <div className="game-info">
-          <div><button className={this.state.caboButtonClass} onClick={this.caboButton}>CABO</button></div>
-          <div><button className="control" onClick={this.startButton}>NEXT</button></div>
-          <div><button className="control" onClick={this.newGameButton}>NEW</button></div>
-          <div>{GameState.name[this.state.gameState]}</div>
-          <div>{this.state.turn}</div>
-          <div>Punkte:</div>
-          <div>Du: {this.state.score.yours} Gegner: {this.state.score.theirs}</div>
         </div>
       </div>
     );
