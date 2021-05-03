@@ -12,7 +12,7 @@ module.exports = class Game {
     this.id = id;
     this.gameState = GameState.NOT_STARTED;
     this.players = [];
-    this.stackCards = {};
+    this.stacks = {};
     this.isStackFlipped = false;
     this.isDiscardStackTapped = false;
     this.activePlayer = 0;
@@ -29,16 +29,16 @@ module.exports = class Game {
   }
 
   restart() {
-    this.stackCards = {
+    this.stacks = {
       main: Array(52).fill(1).map((v, i) => {return new Card(Math.floor(i/4 + 0.5))}).shuffle(),
       discard: [],
     };
-    this.stackCards.discard.push(this.stackCards.main.pop().flip());
+    this.stacks.discard.push(this.stacks.main.pop().flip());
     for (const p of this.players) {
       p.cardsViewed = [];
       p.cards = Array(CARD_SLOTS).fill(null);
       for (let i=0;i<STARTING_CARDS;i++) {
-        p.cards[i] = this.stackCards.main.pop();
+        p.cards[i] = this.stacks.main.pop();
       }
     }
     this.setState(GameState.NOT_STARTED);
@@ -60,7 +60,7 @@ module.exports = class Game {
       p.socket.emit('game_event', {i: DRAW_IND, label: 'C'});
       p.socket.emit('game_event', {
         i: DISCARD_IND, 
-        label: this.stackCards.discard[this.stackCards.discard.length-1].label,
+        label: this.stacks.discard[this.stacks.discard.length-1].label,
       });
     }
   }
@@ -69,7 +69,7 @@ module.exports = class Game {
     let cards = [];
     let p;
     
-    for (let i=0;i<STARTING_CARDS;i++) cards.push(this.stackCards.main.pop());
+    for (let i=0;i<STARTING_CARDS;i++) cards.push(this.stacks.main.pop());
     cards.push(null, null);
     p = new Player(socket.id, socket.id, cards, socket);
 
@@ -78,7 +78,7 @@ module.exports = class Game {
 
     socket.emit('game_event', {
       i: DISCARD_IND, 
-      label: this.stackCards.discard[this.stackCards.discard.length-1].label,
+      label: this.stacks.discard[this.stacks.discard.length-1].label,
     });
     
     socket.emit('game_state', {'state': this.gameState});
@@ -133,11 +133,11 @@ module.exports = class Game {
       this.discardCard(player.cards[i].flip());
       player.cards[i] = null;
     }
-    player.cards[this.selectedCardInds[0]] = this.stackCards.main.pop().flip();
+    player.cards[this.selectedCardInds[0]] = this.stacks.main.pop().flip();
   }
 
   swapCardWithDiscard(player) {
-    let card = this.stackCards.discard.pop().flip();
+    let card = this.stacks.discard.pop().flip();
     for (let i of this.selectedCardInds) {
       this.discardCard(player.cards[i].flip());
       player.cards[i] = null;
@@ -147,7 +147,7 @@ module.exports = class Game {
   }
 
   discardDraw() {
-    let c = this.stackCards.main.pop();
+    let c = this.stacks.main.pop();
     
     this.discardCard(c);
 
@@ -157,19 +157,19 @@ module.exports = class Game {
     }
 
     for (let p of this.players) p.socket.emit('game_event', {
-      i: DRAW_IND, label: this.stackCards.main[this.stackCards.main.length-1].label
+      i: DRAW_IND, label: this.stacks.main[this.stacks.main.length-1].label
     });
   }
 
   discardCard(c) {
-    this.stackCards.discard.push(c);
+    this.stacks.discard.push(c);
     for (let p of this.players) p.socket.emit('game_event', {i: DISCARD_IND, label: c.label});
   }
 
   penaltyDraw(p) {
     for (let i=0;i<CARD_SLOTS;i++) {
       if (p.cards[i] === null) {
-        p.cards[i] = this.stackCards.main.pop().flip();
+        p.cards[i] = this.stacks.main.pop().flip();
         p.socket.emit('game_event', {i: i, label: p.cards[i].label});
         break;
       }
@@ -179,7 +179,7 @@ module.exports = class Game {
   penaltyDiscard(p) {
     for (let i=0;i<CARD_SLOTS;i++) {
       if (p.cards[i] === null) {
-        p.cards[i] = this.stackCards.discard.pop().flip();
+        p.cards[i] = this.stacks.discard.pop().flip();
         p.socket.emit('game_event', {i: i, label: p.cards[i].label});
         break;
       }
@@ -197,8 +197,8 @@ module.exports = class Game {
     this.isDiscardStackTapped = false;
     this.peek = false;
 
-    let drawLabel = this.stackCards.main[this.stackCards.main.length-1].label;
-    let discardLabel = this.stackCards.discard[0] === undefined ? '' : this.stackCards.discard[this.stackCards.discard.length-1].label;
+    let drawLabel = this.stacks.main[this.stacks.main.length-1].label;
+    let discardLabel = this.stacks.discard[0] === undefined ? '' : this.stacks.discard[this.stacks.discard.length-1].label;
 
     for (let p of this.players) {
       p.socket.emit('game_event', {i: DRAW_IND, label: drawLabel});
@@ -380,7 +380,7 @@ module.exports = class Game {
           this.discardDraw();
 
           current_player.socket.emit('game_event', {
-            i: DRAW_IND, label: this.stackCards.main[this.stackCards.main.length-1].label
+            i: DRAW_IND, label: this.stacks.main[this.stacks.main.length-1].label
           });
 
           this.endTurn();
@@ -391,11 +391,11 @@ module.exports = class Game {
       if (!this.startGame()) return data;
 
       this.isStackFlipped = true;
-      card = this.stackCards.main[this.stackCards.main.length -1].flip();
+      card = this.stacks.main[this.stacks.main.length -1].flip();
 
       if (card.value == 7 || card.value == 8) this.peek = true;
 
-      data = [{i: DRAW_IND, label: this.stackCards.main[this.stackCards.main.length -1].label}];
+      data = [{i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label}];
 
     } else if (i===DISCARD_IND && isActivePlayer) {
       // Discard stack was already tapped but no player card has been selected, do nothing
@@ -414,7 +414,7 @@ module.exports = class Game {
 
       // They selected the discard stack to draw from it
       if (!this.isStackFlipped && !this.isDiscardStackTapped) {
-        if (!this.startGame() || this.stackCards.discard[0] === undefined) return data;
+        if (!this.startGame() || this.stacks.discard[0] === undefined) return data;
 
         this.isDiscardStackTapped = true;
 
@@ -440,7 +440,7 @@ module.exports = class Game {
       }
 
 
-      data = [{i: DRAW_IND, label: this.stackCards.main[this.stackCards.main.length -1].label}];
+      data = [{i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label}];
 
       for (let i=0;i<CARD_SLOTS;i++) {
         if (current_player.cards[i] !== null && current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
