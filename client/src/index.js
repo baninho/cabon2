@@ -31,12 +31,12 @@ const GameState = Object.freeze({
   FINAL_ROUND: 3,
   FINISHED: 4,
   name: {
-    255: 'STATE_NOT_RECEIVED',
-    0: 'NOT_STARTED',
-    1: 'STARTED',
-    2: 'CABO',
-    3: 'FINAL_ROUND',
-    4: 'FINISHED',
+    255: '',
+    0: 'Take a look at your cards',
+    1: '',
+    2: 'Cabo!',
+    3: 'Cabo!',
+    4: "Round's over - click NEXT to play the next",
   },
 });
 
