@@ -240,10 +240,16 @@ class Game extends React.Component {
       console.log('received game state');
       console.log(data);
 
+      let theirs = [];
+
+      for (let i=0;i<data.theirs.length;i++) {
+        theirs[i] = ('' + data.theirs[i]).padStart(5, '\u00a0');
+      }
+
       this.setState({
         score: {
           yours: data.yours,
-          theirs: data.theirs,
+          theirs: theirs,
         },
       });
     });
