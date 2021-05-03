@@ -116,7 +116,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     for (let p of game.players) {
       if (p.id === socket.id) {
-        p.cards.splice(p.cards.indexOf(null)) // TODO: Handle null values in the middle of the array
+        p.cards = p.cards.filter((c) => {return c !== null});
         Array.prototype.push.apply(game.stackCards.main, p.cards);
         game.scores.splice(game.players.indexOf(p), 1);
         game.players.splice(game.players.indexOf(p), 1);
