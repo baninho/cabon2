@@ -197,6 +197,14 @@ module.exports = class Game {
     this.isDiscardStackTapped = false;
     this.peek = false;
 
+    let drawLabel = this.stackCards.main[this.stackCards.main.length-1].label;
+    let discardLabel = this.stackCards.discard[0] === undefined ? '' : this.stackCards.discard[this.stackCards.discard.length-1].label;
+
+    for (let p of this.players) {
+      p.socket.emit('game_event', {i: DRAW_IND, label: drawLabel});
+      p.socket.emit('game_event', {i: DISCARD_IND, label: discardLabel});
+    }
+
     if (this.gameState == GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) this.endGame();
   }
 
@@ -406,7 +414,7 @@ module.exports = class Game {
 
       // They selected the discard stack to draw from it
       if (!this.isStackFlipped && !this.isDiscardStackTapped) {
-        if (!this.startGame()) return data;
+        if (!this.startGame() || this.stackCards.discard[0] === undefined) return data;
 
         this.isDiscardStackTapped = true;
 
