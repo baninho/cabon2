@@ -307,12 +307,11 @@ module.exports = class Game {
   // TODO: Check if things can be separated out into other functions
   // TODO: Handle sending data in here instead of returning data
   handleClick(i, socket) {
-    if (this.players.length < 2) return [{}];
+    if (this.players.length < 2) return;
 
     let current_player;
     let other_player;
     let isActivePlayer;
-    let data = [{}];
     let card;
 
     for (let p of this.players) {
@@ -322,17 +321,17 @@ module.exports = class Game {
 
     isActivePlayer = this.players.indexOf(current_player) === this.activePlayer;
 
-    if (!isActivePlayer && this.gameState != GameState.NOT_STARTED) return data;
+    if (!isActivePlayer && this.gameState != GameState.NOT_STARTED) return;
 
     if (i<CARD_SLOTS) {
       console.log(current_player.cards);
       // The player clicked one of their cards
 
       // If they are spying they can't perform any action on their cards
-      if (this.spy) return data;
+      if (this.spy) return;
 
       // Check if he still has a card in that spot
-      if (current_player.cards[i] === null) return data;
+      if (current_player.cards[i] === null) return;
 
       if (this.swap) {
         // If a Swap was discarded, this will select the card to swap with
@@ -346,7 +345,7 @@ module.exports = class Game {
           }
         }
 
-        return data;
+        return;
       }
 
       // If they have a card and it is before the start of the game, flip it
@@ -359,7 +358,7 @@ module.exports = class Game {
 
           if (!current_player.cardsViewed.includes(c)) current_player.cardsViewed.push(c);
 
-          data = [{i: i, label: c.label}];
+          current_player.socket.emit('game_event', {i: i, label: c.label});
         }
       } else if (this.isStackFlipped || this.isDiscardStackTapped) {
         // The game started, now we select cards to swap for the draw
@@ -388,19 +387,19 @@ module.exports = class Game {
       }
     } else if (i===DRAW_IND && !this.isStackFlipped && !this.isDiscardStackTapped && isActivePlayer) {
       // This is the stack
-      if (!this.startGame()) return data;
+      if (!this.startGame()) return;
 
       this.isStackFlipped = true;
       card = this.stacks.main[this.stacks.main.length -1].flip();
 
       if (card.value == 7 || card.value == 8) this.peek = true;
 
-      data = [{i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label}];
+      current_player.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
 
     } else if (i===DISCARD_IND && isActivePlayer) {
       // Discard stack was already tapped but no player card has been selected, do nothing
       // This will actually also catch this.spy
-      if (this.isDiscardStackTapped && this.selectedCardInds[0] === undefined) return data;
+      if (this.isDiscardStackTapped && this.selectedCardInds[0] === undefined) return;
 
       // If this.swap is set, it was set when the card was discarded
       // this is the second click here, indicating that they don't want to swap
@@ -409,16 +408,16 @@ module.exports = class Game {
         this.xCards = [];
         this.endTurn();
 
-        return data;
+        return;
       }
 
       // They selected the discard stack to draw from it
       if (!this.isStackFlipped && !this.isDiscardStackTapped) {
-        if (!this.startGame() || this.stacks.discard[0] === undefined) return data;
+        if (!this.startGame() || this.stacks.discard[0] === undefined) return;
 
         this.isDiscardStackTapped = true;
 
-        return data;
+        return;
       }
 
       if (this.areCardsEqual()){
@@ -439,8 +438,7 @@ module.exports = class Game {
         if (this.isDiscardStackTapped) this.penaltyDiscard(current_player);
       }
 
-
-      data = [{i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label}];
+      current_player.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
 
       for (let i=0;i<CARD_SLOTS;i++) {
         if (current_player.cards[i] !== null && current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
@@ -453,7 +451,7 @@ module.exports = class Game {
       }
 
       // Now this.swap has been set by discardDraw()
-      if (this.swap || this.spy) return data;
+      if (this.swap || this.spy) return;
 
       this.endTurn();
       this.selectedCardInds = [];
@@ -481,7 +479,7 @@ module.exports = class Game {
       }
     }
     
-    return data;
+    return;
   }
 
   swapCards(p0, p1) {

@@ -108,8 +108,7 @@ io.on('connection', (socket) => {
     console.log('clicked: ' + data.i);
     console.log('player sid: ' + socket.id);
 
-    responseData = game.handleClick(data.i, socket);
-    for (d of responseData) socket.emit('game_event', d);
+    game.handleClick(data.i, socket);
   });
 
   // remove player from game when they disconnect
@@ -117,7 +116,7 @@ io.on('connection', (socket) => {
     for (let p of game.players) {
       if (p.id === socket.id) {
         p.cards = p.cards.filter((c) => {return c !== null});
-        Array.prototype.push.apply(game.stackCards.main, p.cards);
+        Array.prototype.push.apply(game.stacks.main, p.cards);
         game.scores.splice(game.players.indexOf(p), 1);
         game.players.splice(game.players.indexOf(p), 1);
         break;
