@@ -309,38 +309,38 @@ module.exports = class Game {
   handleClick(i, socket) {
     if (this.players.length < 2) return;
 
-    let current_player;
-    let other_player;
+    let currentPl;
+    let otherPl;
     let isActivePlayer;
     let card;
 
     for (let p of this.players) {
-      if (p.id === socket.id) current_player = p;
-      else other_player = p; // TODO: adapt this for more than one player
+      if (p.id === socket.id) currentPl = p;
+      else otherPl = p; // TODO: adapt this for more than one player
     }
 
-    isActivePlayer = this.players.indexOf(current_player) === this.activePlayer;
+    isActivePlayer = this.players.indexOf(currentPl) === this.activePlayer;
 
     if (!isActivePlayer && this.gameState != GameState.NOT_STARTED) return;
 
     if (i<CARD_SLOTS) {
-      console.log(current_player.cards);
+      console.log(currentPl.cards);
       // The player clicked one of their cards
 
       // If they are spying they can't perform any action on their cards
       if (this.spy) return;
 
       // Check if he still has a card in that spot
-      if (current_player.cards[i] === null) return;
+      if (currentPl.cards[i] === null) return;
 
       if (this.swap) {
         // If a Swap was discarded, this will select the card to swap with
         // an opponents card; if an opponents card was already selected swaps them now
         if (this.xCards[0] === undefined){
-          this.xCards[0] = current_player.cards[i];
+          this.xCards[0] = currentPl.cards[i];
 
           if (this.xCards[1] !== undefined) {
-            this.swapCards(current_player, other_player);
+            this.swapCards(currentPl, otherPl);
             this.endTurn(); 
           }
         }
@@ -351,34 +351,34 @@ module.exports = class Game {
       // If they have a card and it is before the start of the game, flip it
       // only allow two cards to be flipped using cardsViewed
       if (this.gameState == GameState.NOT_STARTED) {
-        let c = current_player.cards[i];
+        let c = currentPl.cards[i];
 
-        if (current_player.cardsViewed.length < 2 || current_player.cardsViewed.includes(c)) {
+        if (currentPl.cardsViewed.length < 2 || currentPl.cardsViewed.includes(c)) {
           c.flip();
 
-          if (!current_player.cardsViewed.includes(c)) current_player.cardsViewed.push(c);
+          if (!currentPl.cardsViewed.includes(c)) currentPl.cardsViewed.push(c);
 
-          current_player.socket.emit('game_event', {i: i, label: c.label});
+          currentPl.socket.emit('game_event', {i: i, label: c.label});
         }
       } else if (this.isStackFlipped || this.isDiscardStackTapped) {
         // The game started, now we select cards to swap for the draw
         if (this.areCardsEqual() && !this.selectedCardInds.includes(i)) {
           this.selectedCardInds.push(i);
 
-          if (!current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+          if (!currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
 
-          current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
+          currentPl.socket.emit('game_event', {i: i, label: currentPl.cards[i].label});
 
         } else if (this.selectedCardInds.length === 1 && this.peek) {
           // If the drawn card is a Peek card, flip the first selected card
-          if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+          if (currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
 
-          current_player.socket.emit('game_event', {i: i, label: current_player.cards[i].label});
+          currentPl.socket.emit('game_event', {i: i, label: currentPl.cards[i].label});
 
           this.selectedCardInds.pop();
           this.discardDraw();
 
-          current_player.socket.emit('game_event', {
+          currentPl.socket.emit('game_event', {
             i: DRAW_IND, label: this.stacks.main[this.stacks.main.length-1].label
           });
 
@@ -394,7 +394,7 @@ module.exports = class Game {
 
       if (card.value == 7 || card.value == 8) this.peek = true;
 
-      current_player.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
+      currentPl.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
 
     } else if (i===DISCARD_IND && isActivePlayer) {
       // Discard stack was already tapped but no player card has been selected, do nothing
@@ -424,30 +424,30 @@ module.exports = class Game {
         if (this.selectedCardInds[0] !== undefined) {
           // Player has seleted at least one of their cards and they have equal value
           // --> discard them and replace one with the drawn card
-          for (let i of this.selectedCardInds) if (current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+          for (let i of this.selectedCardInds) if (currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
   
           // Handle if card came from stack or discard
-          if (this.isStackFlipped) this.swapCardWithDraw(current_player);
-          else this.swapCardWithDiscard(current_player);
+          if (this.isStackFlipped) this.swapCardWithDraw(currentPl);
+          else this.swapCardWithDiscard(currentPl);
   
           // No player card was selected, card is directly discarded from stack
         } else if (this.isStackFlipped) this.discardDraw();
       } else {
         // Selected cards were not equal, they must draw an extra card
-        if (this.isStackFlipped) this.penaltyDraw(current_player);
-        if (this.isDiscardStackTapped) this.penaltyDiscard(current_player);
+        if (this.isStackFlipped) this.penaltyDraw(currentPl);
+        if (this.isDiscardStackTapped) this.penaltyDiscard(currentPl);
       }
 
-      current_player.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
+      currentPl.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
 
       for (let i=0;i<CARD_SLOTS;i++) {
-        if (current_player.cards[i] !== null && current_player.cards[i].isFaceUp()) current_player.cards[i].flip();
+        if (currentPl.cards[i] !== null && currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
 
-        let msg0 = {i: i, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
-        let msg1 = {i: i+CARD_SLOTS, label: current_player.cards[i] === null ? '' : current_player.cards[i].label};
+        let msg0 = {i: i, label: currentPl.cards[i] === null ? '' : currentPl.cards[i].label};
+        let msg1 = {i: i+CARD_SLOTS, label: currentPl.cards[i] === null ? '' : currentPl.cards[i].label};
         
-        current_player.socket.emit('game_event', msg0);
-        other_player.socket.emit('game_event', msg1);
+        currentPl.socket.emit('game_event', msg0);
+        otherPl.socket.emit('game_event', msg1);
       }
 
       // Now this.swap has been set by discardDraw()
@@ -458,22 +458,22 @@ module.exports = class Game {
 
     } else if (i<DRAW_IND) {
       if (this.swap && this.xCards[1] === undefined) {
-        this.xCards[1] = other_player.cards[i-CARD_SLOTS];
+        this.xCards[1] = otherPl.cards[i-CARD_SLOTS];
 
         if (this.xCards[0] !== undefined) {
-          this.swapCards(current_player, other_player);
+          this.swapCards(currentPl, otherPl);
           this.endTurn();
         }
 
       } else if (this.spy === 1) {
         this.spy = 2;
 
-        current_player.socket.emit('game_event', {i: i, label: other_player.cards[i-CARD_SLOTS].flip().label});
+        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].flip().label});
 
       } else if (this.spy === 2) {
         this.spy = 0;
 
-        current_player.socket.emit('game_event', {i: i, label: other_player.cards[i-CARD_SLOTS].flip().label});
+        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].flip().label});
 
         this.endTurn();
       }
