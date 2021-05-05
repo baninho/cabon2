@@ -74,14 +74,6 @@ exports.Game = class Game {
     this.players.push(p);
     this.scores.push(0);
 
-    p.socket.emit('game_event', {
-      i: DISCARD_IND, 
-      label: this.stacks.discard[this.stacks.discard.length-1].label,
-    });
-    
-    p.socket.emit('game_state', {'state': this.gameState});
-    p.socket.emit('turn', {yours: this.activePlayer === this.players.indexOf(p) ? 1 : 0});
-
     p.view.updateAll(this.players, this.stacks);
   }
 

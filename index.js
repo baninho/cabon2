@@ -90,6 +90,9 @@ io.on('connection', (socket) => {
     p = new Player(socket.id, socket.id, [], socket);
     game.addNewPlayer(p);
     socket.join(game.id);
+    socket.emit('boardView', {playerCount: game.players.length, labels: p.view.getLabels()});
+    socket.emit('turn', {yours: game.activePlayer === game.players.indexOf(p) ? 1 : 0});
+    socket.emit('game_state', {'state': game.gameState});
   });
   
   // handle new game, cabo, next round buttons
