@@ -12,4 +12,9 @@ module.exports = class Card {
   isFaceUp() {
     return this.label == this.value;
   }
+
+  touch() {
+    if (!this.isFaceUp()) this.label = this.label === 'C' ? 'Cx' : 'C';
+    return this;
+  }
 }
