@@ -265,6 +265,8 @@ class Game extends React.Component {
     });
 
     socket.on('boardView', (data) => {
+      let pInd;
+      
       for (let i=0;i<data.playerCount*CARD_SLOTS;i++) {
         pInd = Math.floor(i/data.playerCount)
         playerCards[pInd][i-pInd*CARD_SLOTS].label = data.labels[i];
