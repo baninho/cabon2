@@ -8,6 +8,6 @@ module.exports = class Player {
     this.cards = cards;
     this.score = 0;
     this.socket = socket;
-    this.view = new BoardView();
+    this.view = new BoardView(this);
   }
 }
