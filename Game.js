@@ -54,8 +54,8 @@ module.exports = class Game {
     for (let p of this.players) {
       console.log(p.cards);
       for (let i=0;i<CARD_SLOTS;i++) {
-        p.socket.emit('game_event', {i: i, label: p.cards[i] !== null? p.cards[i].label : null});
-        p.socket.to(this.id).emit('game_event', {i: i+CARD_SLOTS, label: p.cards[i] !== null? p.cards[i].label : null});
+        p.socket.emit('game_event', {i: i, label: p.cards[i] !== null ? p.cards[i].label : null});
+        p.socket.to(this.id).emit('game_event', {i: i+CARD_SLOTS, label: p.cards[i] !== null ? p.cards[i].label : null});
       }
       p.socket.emit('game_event', {i: DRAW_IND, label: 'C'});
       p.socket.emit('game_event', {
@@ -467,13 +467,15 @@ module.exports = class Game {
 
       } else if (this.spy === 1) {
         this.spy = 2;
+        otherPl.cards[i-CARD_SLOTS].flip();
 
-        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].flip().label});
+        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].label});
 
       } else if (this.spy === 2) {
         this.spy = 0;
+        otherPl.cards[i-CARD_SLOTS].flip();
 
-        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].flip().label});
+        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].label});
 
         this.endTurn();
       }
