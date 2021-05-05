@@ -403,8 +403,14 @@ exports.Game = class Game {
 
       // If this.swap is set, it was set when the card was discarded
       // this is the second click here, indicating that they don't want to swap
-      if (this.swap) {
+      if (this.swap || this.spy) {
         this.swap = false;
+        if (this.spyCard && otherPl.cards[this.spyCard-CARD_SLOTS].isFaceUp()) {
+          otherPl.cards[this.spyCard-CARD_SLOTS].flip();
+          currentPl.socket.emit('game_event', {i: this.spyCard, label: otherPl.cards[this.spyCard-CARD_SLOTS].label});
+        }
+        this.spyCard = null;
+        this.spy = 0;
         this.xCards = [];
         this.endTurn();
 
@@ -467,11 +473,13 @@ exports.Game = class Game {
 
       } else if (this.spy === 1) {
         this.spy = 2;
+        this.spyCard = i;
         otherPl.cards[i-CARD_SLOTS].flip();
 
         currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].label});
 
       } else if (this.spy === 2) {
+        if (this.spyCard !== i) return;
         this.spy = 0;
         otherPl.cards[i-CARD_SLOTS].flip();
 
