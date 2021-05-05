@@ -33,13 +33,14 @@ module.exports = class BoardView {
     ps.forEach((p, i) => {
       this.updatePlayer(p, i);
     });
-
-    this.#wasUpdated = true;
   }
 
   updateAll(players, stacks) {
     this.updatePlayers(players);
+    this.updateStacks(stacks);
+  }
 
+  updateStacks(stacks) {
     this.#labels[DRAW_IND] = stacks.main[stacks.main.length - 1].label;
     this.#labels[DISCARD_IND] = stacks.discard[stacks.discard.length - 1].label;
 
