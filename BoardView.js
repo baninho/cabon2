@@ -4,8 +4,8 @@ module.exports = class BoardView {
   #labels;
   #wasUpdated;
 
-  constructor(labels) {
-    this.#labels = labels;
+  constructor() {
+    this.#labels = Array(26).fill('');
     this.#wasUpdated = true;
   }
 
