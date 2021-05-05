@@ -101,7 +101,12 @@ io.on('connection', (socket) => {
     console.log('message received');
     console.log(data);
     if (data.button) {
-      if (data.button === 'newgame') game.newGame();
+      if (data.button === 'newgame') {
+        game.newGame();
+        for (p of game.players) {
+          p.socket.emit('boardView', {playerCount: game.players.length, labels: p.view.getLabels()});
+        }
+      }
       if (data.button === 'start') game.nextRound();
       if (data.button === 'cabo' && socket === game.players[game.activePlayer].socket) game.cabo(); 
     }
@@ -113,6 +118,10 @@ io.on('connection', (socket) => {
     console.log('player sid: ' + socket.id);
 
     game.handleClick(data.i, socket);
+    
+    for (p of game.players) {
+      p.socket.emit('boardView', {playerCount: game.players.length, labels: p.view.getLabels()});
+    }
   });
 
   // remove player from game when they disconnect
