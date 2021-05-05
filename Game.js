@@ -81,6 +81,8 @@ exports.Game = class Game {
     
     p.socket.emit('game_state', {'state': this.gameState});
     p.socket.emit('turn', {yours: this.activePlayer === this.players.indexOf(p) ? 1 : 0});
+
+    p.view.updateAll(this.players, this.stacks);
   }
 
   newGame() {
