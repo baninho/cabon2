@@ -3,10 +3,12 @@ const { CARD_SLOTS, DRAW_IND, DISCARD_IND } = require('./Game');
 module.exports = class BoardView {
   #labels;
   #wasUpdated;
+  #parent
 
-  constructor() {
+  constructor(parent) {
     this.#labels = Array(26).fill('');
     this.#wasUpdated = true;
+    this.#parent = parent;
   }
 
   updateLabel(i, label) {
@@ -23,7 +25,12 @@ module.exports = class BoardView {
   }
 
   updatePlayers(players) {
-    players.forEach((p, i) => {
+    let ps = players.slice();
+    let p = ps.splice(ps.indexOf(this.#parent), 1);
+
+    ps = p.concat(ps);
+    
+    ps.forEach((p, i) => {
       this.updatePlayer(p, i);
     });
 
