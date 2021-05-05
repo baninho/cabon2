@@ -264,7 +264,22 @@ class Game extends React.Component {
       console.log(data);
     });
 
-    for (let i=0;i<6;i++) {
+    socket.on('boardView', (data) => {
+      for (let i=0;i<data.playerCount*CARD_SLOTS;i++) {
+        pInd = Math.floor(i/data.playerCount)
+        playerCards[pInd][i-pInd*CARD_SLOTS].label = data.labels[i];
+      }
+
+      stackCards[0].label = data.labels[DRAW_IND];
+      stackCards[1].label = data.labels[DISCARD_IND];
+
+      this.setState({
+        playerCards: playerCards,
+        stackCards: stackCards,
+      });
+    });
+
+    for (let i=0;i<CARD_SLOTS;i++) {
       playerCards[0][i] = new CardData(i<4 ? C : null);
       playerCards[1][i] = new CardData(i<4 ? C : null);
     }
