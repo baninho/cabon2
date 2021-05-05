@@ -17,4 +17,8 @@ module.exports = class Card {
     if (!this.isFaceUp()) this.label = this.label === 'C' ? 'Cx' : 'C';
     return this;
   }
+
+  getLabel() {
+    return this.label;
+  }
 }
