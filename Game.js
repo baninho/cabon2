@@ -39,6 +39,8 @@ exports.Game = class Game {
       for (let i=0;i<STARTING_CARDS;i++) {
         p.cards[i] = this.stacks.main.pop();
       }
+
+      p.view.updateAll(this.players, this.stacks);
     }
     this.setState(GameState.NOT_STARTED);
     this.isStackFlipped = false;
@@ -111,10 +113,8 @@ exports.Game = class Game {
           if (c !== null && c.isFaceUp()) c.flip();
         }
       }
-      // TODO: refactor to just go through cards and send their labels
-      for (let i=0;i<STARTING_CARDS;i++) {
-        for (let p of this.players) p.socket.emit('game_event', {'i': i, 'label': 'C'});
-      }
+      
+      for (let p of this.players) p.view.updateAll(this.players, this.stacks);
     }
 
     return true;
@@ -189,12 +189,8 @@ exports.Game = class Game {
     this.isDiscardStackTapped = false;
     this.peek = false;
 
-    let drawLabel = this.stacks.main[this.stacks.main.length-1].label;
-    let discardLabel = this.stacks.discard[0] === undefined ? '' : this.stacks.discard[this.stacks.discard.length-1].label;
-
     for (let p of this.players) {
-      p.socket.emit('game_event', {i: DRAW_IND, label: drawLabel});
-      p.socket.emit('game_event', {i: DISCARD_IND, label: discardLabel});
+      p.view.updateStacks(this.stacks);
     }
 
     if (this.gameState == GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) this.endGame();
@@ -286,12 +282,7 @@ exports.Game = class Game {
         if (c !== null && !c.isFaceUp()) c.flip();
       }
 
-      for (let i=0;i<CARD_SLOTS;i++) {
-        if(p.cards[i] !== null) {
-          p.socket.emit('game_event', {i: i, label: p.cards[i].label});
-          p.socket.to(this.id).emit('game_event', {i: i+CARD_SLOTS, label: p.cards[i].label});
-        }
-      }
+      p.view.updatePlayers(this.players);
     }
   }
 
@@ -350,7 +341,7 @@ exports.Game = class Game {
 
           if (!currentPl.cardsViewed.includes(c)) currentPl.cardsViewed.push(c);
 
-          currentPl.socket.emit('game_event', {i: i, label: c.label});
+          currentPl.view.updatePlayer(currentPl, 0);
         }
       } else if (this.isStackFlipped || this.isDiscardStackTapped) {
         // The game started, now we select cards to swap for the draw
@@ -359,20 +350,18 @@ exports.Game = class Game {
 
           if (!currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
 
-          currentPl.socket.emit('game_event', {i: i, label: currentPl.cards[i].label});
+          currentPl.view.updatePlayer(currentPl, 0);
 
         } else if (this.selectedCardInds.length === 1 && this.peek) {
           // If the drawn card is a Peek card, flip the first selected card
           if (currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
 
-          currentPl.socket.emit('game_event', {i: i, label: currentPl.cards[i].label});
+          currentPl.view.updatePlayer(currentPl, 0);
 
           this.selectedCardInds.pop();
           this.discardDraw();
 
-          currentPl.socket.emit('game_event', {
-            i: DRAW_IND, label: this.stacks.main[this.stacks.main.length-1].label
-          });
+          currentPl.view.updateStacks(this.stacks);
 
           this.endTurn();
         }
@@ -386,7 +375,7 @@ exports.Game = class Game {
 
       if (card.value == 7 || card.value == 8) this.peek = true;
 
-      currentPl.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
+      currentPl.view.updateStacks(this.stacks);
 
     } else if (i===DISCARD_IND && isActivePlayer) {
       // Discard stack was already tapped but no player card has been selected, do nothing
@@ -399,7 +388,7 @@ exports.Game = class Game {
         this.swap = false;
         if (this.spyCard && otherPl.cards[this.spyCard-CARD_SLOTS].isFaceUp()) {
           otherPl.cards[this.spyCard-CARD_SLOTS].flip();
-          currentPl.socket.emit('game_event', {i: this.spyCard, label: otherPl.cards[this.spyCard-CARD_SLOTS].label});
+          currentPl.view.updatePlayers(this.players);
         }
         this.spyCard = null;
         this.spy = 0;
@@ -436,17 +425,14 @@ exports.Game = class Game {
         if (this.isDiscardStackTapped) this.penaltyDiscard(currentPl);
       }
 
-      currentPl.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
+      currentPl.view.updateStacks(this.stacks);
 
       for (let i=0;i<CARD_SLOTS;i++) {
         if (currentPl.cards[i] !== null && currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
-
-        let msg0 = {i: i, label: currentPl.cards[i] === null ? '' : currentPl.cards[i].label};
-        let msg1 = {i: i+CARD_SLOTS, label: currentPl.cards[i] === null ? '' : currentPl.cards[i].label};
-        
-        currentPl.socket.emit('game_event', msg0);
-        otherPl.socket.emit('game_event', msg1);
       }
+
+      currentPl.view.updatePlayers(this.players);
+      otherPl.view.updatePlayers(this.players);
 
       // Now this.swap has been set by discardDraw()
       if (this.swap || this.spy) return;
@@ -468,14 +454,14 @@ exports.Game = class Game {
         this.spyCard = i;
         otherPl.cards[i-CARD_SLOTS].flip();
 
-        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].label});
+        currentPl.view.updatePlayers(this.players);
 
       } else if (this.spy === 2) {
         if (this.spyCard !== i) return;
         this.spy = 0;
         otherPl.cards[i-CARD_SLOTS].flip();
 
-        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].label});
+        currentPl.view.updatePlayers(this.players);
 
         this.endTurn();
       }
