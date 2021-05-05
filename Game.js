@@ -1,6 +1,5 @@
 const GameState = require('./GameState');
 const Card = require('./Card');
-const Player = require('./Player');
 
 const DRAW_IND = 24;
 const DISCARD_IND = 25;
@@ -65,24 +64,23 @@ exports.Game = class Game {
     }
   }
 
-  addNewPlayer(socket) {
+  addNewPlayer(p) {
     let cards = [];
-    let p;
     
     for (let i=0;i<STARTING_CARDS;i++) cards.push(this.stacks.main.pop());
     cards.push(null, null);
-    p = new Player(socket.id, socket.id, cards, socket);
+    p.cards = cards;
 
     this.players.push(p);
     this.scores.push(0);
 
-    socket.emit('game_event', {
+    p.socket.emit('game_event', {
       i: DISCARD_IND, 
       label: this.stacks.discard[this.stacks.discard.length-1].label,
     });
     
-    socket.emit('game_state', {'state': this.gameState});
-    socket.emit('turn', {yours: this.activePlayer === this.players.indexOf(p) ? 1 : 0});
+    p.socket.emit('game_state', {'state': this.gameState});
+    p.socket.emit('turn', {yours: this.activePlayer === this.players.indexOf(p) ? 1 : 0});
   }
 
   newGame() {

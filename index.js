@@ -9,6 +9,7 @@ const { is } = require('type-is');
 const io = new Server(server);
 
 const { Game } = require('./Game');
+const Player = require('./Player');
 
 const games = [];
 
@@ -75,6 +76,7 @@ io.on('connection', (socket) => {
   socket.on('url', (data) => {
     
     let gameId = path.basename(data.url);
+    let p;
 
     console.log(gameId);
 
@@ -85,7 +87,8 @@ io.on('connection', (socket) => {
     }
   
     game = games[gameIds.indexOf(gameId)];
-    game.addNewPlayer(socket);
+    p = new Player(socket.id, socket.id, [], socket);
+    game.addNewPlayer(p);
     socket.join(game.id);
   });
   
