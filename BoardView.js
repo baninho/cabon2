@@ -16,7 +16,7 @@ module.exports = class BoardView {
 
   updatePlayer(player, playerInd) {
     player.cards.forEach((c, i) => {
-      this.#labels[i + playerInd*CARD_SLOTS] = c.label;
+      this.#labels[i + playerInd*CARD_SLOTS] = c === null ? '' : c.label;
     });
 
     this.#wasUpdated = true;
