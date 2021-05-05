@@ -36,8 +36,7 @@ describe('BoardView', () => {
     expect(view.getLabels().length).toBe(26);
   });
 
-  it("BoardView.getLabels() are equal to the ones of the player's cards passed in through updatePlayer()", () => {
-    const game = new Game('test_id');
+  it("BoardView.getLabels() are equal to the ones of the player's cards passed in through updatePlayer(p, 0)", () => {
     const view = new BoardView();
     const cards = [(new Card(13)).flip(), new Card(10).flip(), new Card(11).flip(), new Card(12).flip()];
     const socket = new Client('http://localhost:5000');
