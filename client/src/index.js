@@ -245,6 +245,7 @@ class Game extends React.Component {
     });
 
     socket.on('boardView', (data) => {
+      console.log(data);
       let pInd;
 
       for (let i=0;i<data.playerCount*CARD_SLOTS;i++) {
