@@ -7,7 +7,7 @@ const DISCARD_IND = 25;
 const CARD_SLOTS = 6;
 const STARTING_CARDS = 4;
 
-module.exports = class Game {
+exports.Game = class Game {
   constructor(id) {
     this.id = id;
     this.gameState = GameState.NOT_STARTED;
@@ -500,3 +500,8 @@ module.exports = class Game {
     this.xCards = [];
   }
 }
+
+exports.DRAW_IND = DRAW_IND;
+exports.DISCARD_IND = DISCARD_IND;
+exports.CARD_SLOTS = CARD_SLOTS;
+exports.STARTING_CARDS = STARTING_CARDS;

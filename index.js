@@ -8,9 +8,7 @@ const { Server } = require("socket.io");
 const { is } = require('type-is');
 const io = new Server(server);
 
-const Game = require('./Game');
-
-const DISCARD_IND = 25;
+const { Game } = require('./Game');
 
 const games = [];
 

@@ -1,5 +1,5 @@
 const { it, expect } = require('@jest/globals');
-const Game = require('./Game');
+const { Game } = require('./Game');
 
 Object.defineProperty(Array.prototype, 'shuffle', {
   value: function() {
