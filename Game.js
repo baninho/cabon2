@@ -153,7 +153,6 @@ exports.Game = class Game {
     for (let i=0;i<CARD_SLOTS;i++) {
       if (p.cards[i] === null) {
         p.cards[i] = this.stacks.main.pop().flip();
-        p.socket.emit('game_event', {i: i, label: p.cards[i].label});
         break;
       }
     }
@@ -163,7 +162,6 @@ exports.Game = class Game {
     for (let i=0;i<CARD_SLOTS;i++) {
       if (p.cards[i] === null) {
         p.cards[i] = this.stacks.discard.pop().flip();
-        p.socket.emit('game_event', {i: i, label: p.cards[i].label});
         break;
       }
     }
