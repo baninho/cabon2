@@ -112,7 +112,12 @@ io.on('connection', (socket) => {
           p.socket.emit('boardView', {playerCount: game.players.length, labels: p.view.getLabels()});
         }
       }
-      if (data.button === 'start') game.nextRound();
+      if (data.button === 'start') {
+        game.nextRound();
+        for (p of game.players) {
+          p.socket.emit('boardView', {playerCount: game.players.length, labels: p.view.getLabels()});
+        }
+      }
       if (data.button === 'cabo' && socket === game.players[game.activePlayer].socket) game.cabo(); 
     }
   });
