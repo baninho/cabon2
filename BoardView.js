@@ -18,7 +18,7 @@ module.exports = class BoardView {
 
   updatePlayer(player, playerInd) {
     player.cards.forEach((c, i) => {
-      this.#labels[i + playerInd*CARD_SLOTS] = c === null ? '' : c.label;
+      this.#setLabel(i + playerInd*CARD_SLOTS, c);
     });
 
     this.#wasUpdated = true;
@@ -41,8 +41,8 @@ module.exports = class BoardView {
   }
 
   updateStacks(stacks) {
-    this.#labels[DRAW_IND] = stacks.main[stacks.main.length - 1].label;
-    this.#labels[DISCARD_IND] = stacks.discard[stacks.discard.length - 1].label;
+    this.#setLabel(DRAW_IND, stacks.main[stacks.main.length - 1])
+    this.#setLabel(DISCARD_IND, stacks.discard[stacks.discard.length - 1])
 
     this.#wasUpdated = true;
   }
@@ -54,5 +54,9 @@ module.exports = class BoardView {
 
   wasUpdated() {
     return this.#wasUpdated;
+  }
+
+  #setLabel(index, card) {
+    this.#labels[index] = card === undefined || card === null ? '' : card.label;
   }
 }
