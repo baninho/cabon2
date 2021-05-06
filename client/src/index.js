@@ -188,27 +188,7 @@ class Game extends React.Component {
       console.log(data);
       const playerCards = this.state.playerCards.slice();
       const stackCards = this.state.stackCards.slice();
-      let img;
-
-      switch (data.label) {
-        case ('C'): img = C; break;
-        case ('Cx'): img = Cx; break;
-        case (0): img = C0; break;
-        case (1): img = C1; break;
-        case (2): img = C2; break;
-        case (3): img = C3; break;
-        case (4): img = C4; break;
-        case (5): img = C5; break;
-        case (6): img = C6; break;
-        case (7): img = C7; break;
-        case (8): img = C8; break;
-        case (9): img = C9; break;
-        case (10): img = C10; break;
-        case (11): img = C11; break;
-        case (12): img = C12; break;
-        case (13): img = C13; break;
-        default: img = null; break;
-      }
+      let img = imgFromLabel(data.label);
 
       if (data.i < CARD_SLOTS) {
         playerCards[0][data.i].label = img;
@@ -264,7 +244,25 @@ class Game extends React.Component {
       console.log(data);
     });
 
-    for (let i=0;i<6;i++) {
+    socket.on('boardView', (data) => {
+      console.log(data);
+      let pInd;
+
+      for (let i=0;i<data.playerCount*CARD_SLOTS;i++) {
+        pInd = Math.floor(i/CARD_SLOTS);
+        playerCards[pInd][i-pInd*CARD_SLOTS].label = imgFromLabel(data.labels[i]);
+      }
+
+      stackCards[0].label = imgFromLabel(data.labels[DRAW_IND]);
+      stackCards[1].label = imgFromLabel(data.labels[DISCARD_IND]);
+
+      this.setState({
+        playerCards: playerCards,
+        stackCards: stackCards,
+      });
+    });
+
+    for (let i=0;i<CARD_SLOTS;i++) {
       playerCards[0][i] = new CardData(i<4 ? C : null);
       playerCards[1][i] = new CardData(i<4 ? C : null);
     }
@@ -289,7 +287,7 @@ class Game extends React.Component {
             CABO
           </button>
           <button 
-            className={this.state.gameState == GameState.FINISHED ? 'control' : 'control btn-inactive'} 
+            className={this.state.gameState === GameState.FINISHED ? 'control' : 'control btn-inactive'} 
             onClick={this.startButton}>
             NEXT
           </button>
@@ -310,6 +308,27 @@ class Game extends React.Component {
   }
 }
 
+function imgFromLabel(label) {
+  switch (label) {
+    case ('C'): return C;
+    case ('Cx'): return Cx;
+    case (0): return C0;
+    case (1): return C1;
+    case (2): return C2;
+    case (3): return C3;
+    case (4): return C4;
+    case (5): return C5;
+    case (6): return C6;
+    case (7): return C7;
+    case (8): return C8;
+    case (9): return C9;
+    case (10): return C10;
+    case (11): return C11;
+    case (12): return C12;
+    case (13): return C13;
+    default: return null;
+  }
+}
 
 // ========================================
 const e = React.createElement;

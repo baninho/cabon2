@@ -1,6 +1,5 @@
 const GameState = require('./GameState');
 const Card = require('./Card');
-const Player = require('./Player');
 
 const DRAW_IND = 24;
 const DISCARD_IND = 25;
@@ -8,6 +7,9 @@ const CARD_SLOTS = 6;
 const STARTING_CARDS = 4;
 
 exports.Game = class Game {
+  otherPl;
+  otherPlInd;
+
   constructor(id) {
     this.id = id;
     this.gameState = GameState.NOT_STARTED;
@@ -41,6 +43,8 @@ exports.Game = class Game {
         p.cards[i] = this.stacks.main.pop();
       }
     }
+
+    this.viewsUpdateAll();
     this.setState(GameState.NOT_STARTED);
     this.isStackFlipped = false;
     this.isDiscardStackTapped = false;
@@ -50,39 +54,23 @@ exports.Game = class Game {
     this.spy = 0;
     this.swap = false;
     this.xCards = [];
-
-    for (let p of this.players) {
-      console.log(p.cards);
-      for (let i=0;i<CARD_SLOTS;i++) {
-        p.socket.emit('game_event', {i: i, label: p.cards[i] !== null ? p.cards[i].label : null});
-        p.socket.to(this.id).emit('game_event', {i: i+CARD_SLOTS, label: p.cards[i] !== null ? p.cards[i].label : null});
-      }
-      p.socket.emit('game_event', {i: DRAW_IND, label: 'C'});
-      p.socket.emit('game_event', {
-        i: DISCARD_IND, 
-        label: this.stacks.discard[this.stacks.discard.length-1].label,
-      });
-    }
   }
 
-  addNewPlayer(socket) {
+  viewsUpdateAll() {
+    for (let p of this.players) p.view.updateAll(this.players, this.stacks);
+  }
+
+  addNewPlayer(p) {
     let cards = [];
-    let p;
     
     for (let i=0;i<STARTING_CARDS;i++) cards.push(this.stacks.main.pop());
     cards.push(null, null);
-    p = new Player(socket.id, socket.id, cards, socket);
+    p.cards = cards;
 
     this.players.push(p);
     this.scores.push(0);
 
-    socket.emit('game_event', {
-      i: DISCARD_IND, 
-      label: this.stacks.discard[this.stacks.discard.length-1].label,
-    });
-    
-    socket.emit('game_state', {'state': this.gameState});
-    socket.emit('turn', {yours: this.activePlayer === this.players.indexOf(p) ? 1 : 0});
+    this.viewsUpdateAll();
   }
 
   newGame() {
@@ -119,11 +107,9 @@ exports.Game = class Game {
           if (c !== null && c.isFaceUp()) c.flip();
         }
       }
-      // TODO: refactor to just go through cards and send their labels
-      for (let i=0;i<STARTING_CARDS;i++) {
-        for (let p of this.players) p.socket.emit('game_event', {'i': i, 'label': 'C'});
-      }
     }
+
+    this.viewsUpdateAll();
 
     return true;
   }
@@ -170,7 +156,6 @@ exports.Game = class Game {
     for (let i=0;i<CARD_SLOTS;i++) {
       if (p.cards[i] === null) {
         p.cards[i] = this.stacks.main.pop().flip();
-        p.socket.emit('game_event', {i: i, label: p.cards[i].label});
         break;
       }
     }
@@ -180,7 +165,6 @@ exports.Game = class Game {
     for (let i=0;i<CARD_SLOTS;i++) {
       if (p.cards[i] === null) {
         p.cards[i] = this.stacks.discard.pop().flip();
-        p.socket.emit('game_event', {i: i, label: p.cards[i].label});
         break;
       }
     }
@@ -197,12 +181,8 @@ exports.Game = class Game {
     this.isDiscardStackTapped = false;
     this.peek = false;
 
-    let drawLabel = this.stacks.main[this.stacks.main.length-1].label;
-    let discardLabel = this.stacks.discard[0] === undefined ? '' : this.stacks.discard[this.stacks.discard.length-1].label;
-
     for (let p of this.players) {
-      p.socket.emit('game_event', {i: DRAW_IND, label: drawLabel});
-      p.socket.emit('game_event', {i: DISCARD_IND, label: discardLabel});
+      p.view.updateStacks(this.stacks);
     }
 
     if (this.gameState == GameState.FINAL_ROUND && this.activePlayer === this.caboCaller) this.endGame();
@@ -293,14 +273,18 @@ exports.Game = class Game {
       for (let c of p.cards) {
         if (c !== null && !c.isFaceUp()) c.flip();
       }
-
-      for (let i=0;i<CARD_SLOTS;i++) {
-        if(p.cards[i] !== null) {
-          p.socket.emit('game_event', {i: i, label: p.cards[i].label});
-          p.socket.to(this.id).emit('game_event', {i: i+CARD_SLOTS, label: p.cards[i].label});
-        }
-      }
     }
+
+    for (let p of this.players) p.view.updatePlayers(this.players);
+  }
+
+  getOtherPlayer(currentPl, i) {
+    let playersCp = this.players.slice();
+    let playersSplice = playersCp.splice(playersCp.indexOf(currentPl), 1);
+
+    playersCp = playersSplice.concat(playersCp);
+
+    return playersCp[Math.floor(i/CARD_SLOTS)];
   }
 
   // all clicks on cards go through here
@@ -310,13 +294,11 @@ exports.Game = class Game {
     if (this.players.length < 2) return;
 
     let currentPl;
-    let otherPl;
     let isActivePlayer;
     let card;
 
     for (let p of this.players) {
       if (p.id === socket.id) currentPl = p;
-      else otherPl = p; // TODO: adapt this for more than one player
     }
 
     isActivePlayer = this.players.indexOf(currentPl) === this.activePlayer;
@@ -340,7 +322,7 @@ exports.Game = class Game {
           this.xCards[0] = currentPl.cards[i];
 
           if (this.xCards[1] !== undefined) {
-            this.swapCards(currentPl, otherPl);
+            this.swapCards(currentPl, this.otherPl);
             this.endTurn(); 
           }
         }
@@ -358,7 +340,7 @@ exports.Game = class Game {
 
           if (!currentPl.cardsViewed.includes(c)) currentPl.cardsViewed.push(c);
 
-          currentPl.socket.emit('game_event', {i: i, label: c.label});
+          currentPl.view.updatePlayer(currentPl, 0);
         }
       } else if (this.isStackFlipped || this.isDiscardStackTapped) {
         // The game started, now we select cards to swap for the draw
@@ -367,20 +349,18 @@ exports.Game = class Game {
 
           if (!currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
 
-          currentPl.socket.emit('game_event', {i: i, label: currentPl.cards[i].label});
+          currentPl.view.updatePlayer(currentPl, 0);
 
         } else if (this.selectedCardInds.length === 1 && this.peek) {
           // If the drawn card is a Peek card, flip the first selected card
           if (currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
 
-          currentPl.socket.emit('game_event', {i: i, label: currentPl.cards[i].label});
+          currentPl.view.updatePlayer(currentPl, 0);
 
           this.selectedCardInds.pop();
           this.discardDraw();
 
-          currentPl.socket.emit('game_event', {
-            i: DRAW_IND, label: this.stacks.main[this.stacks.main.length-1].label
-          });
+          currentPl.view.updateStacks(this.stacks);
 
           this.endTurn();
         }
@@ -394,7 +374,7 @@ exports.Game = class Game {
 
       if (card.value == 7 || card.value == 8) this.peek = true;
 
-      currentPl.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
+      currentPl.view.updateStacks(this.stacks);
 
     } else if (i===DISCARD_IND && isActivePlayer) {
       // Discard stack was already tapped but no player card has been selected, do nothing
@@ -403,8 +383,14 @@ exports.Game = class Game {
 
       // If this.swap is set, it was set when the card was discarded
       // this is the second click here, indicating that they don't want to swap
-      if (this.swap) {
+      if (this.swap || this.spy) {
         this.swap = false;
+        if (this.spyCard && this.otherPl.cards[this.spyCard-CARD_SLOTS].isFaceUp()) {
+          this.otherPl.cards[this.spyCard-CARD_SLOTS].flip();
+          currentPl.view.updatePlayers(this.players);
+        }
+        this.spyCard = null;
+        this.spy = 0;
         this.xCards = [];
         this.endTurn();
 
@@ -438,17 +424,11 @@ exports.Game = class Game {
         if (this.isDiscardStackTapped) this.penaltyDiscard(currentPl);
       }
 
-      currentPl.socket.emit('game_event', {i: DRAW_IND, label: this.stacks.main[this.stacks.main.length -1].label});
-
       for (let i=0;i<CARD_SLOTS;i++) {
         if (currentPl.cards[i] !== null && currentPl.cards[i].isFaceUp()) currentPl.cards[i].flip();
-
-        let msg0 = {i: i, label: currentPl.cards[i] === null ? '' : currentPl.cards[i].label};
-        let msg1 = {i: i+CARD_SLOTS, label: currentPl.cards[i] === null ? '' : currentPl.cards[i].label};
-        
-        currentPl.socket.emit('game_event', msg0);
-        otherPl.socket.emit('game_event', msg1);
       }
+
+      this.viewsUpdateAll();
 
       // Now this.swap has been set by discardDraw()
       if (this.swap || this.spy) return;
@@ -457,25 +437,30 @@ exports.Game = class Game {
       this.selectedCardInds = [];
 
     } else if (i<DRAW_IND) {
+      this.otherPl = this.getOtherPlayer(currentPl, i);
+      this.otherPlInd = this.players.indexOf(this.otherPl);
+
       if (this.swap && this.xCards[1] === undefined) {
-        this.xCards[1] = otherPl.cards[i-CARD_SLOTS];
+        this.xCards[1] = this.otherPl.cards[i%CARD_SLOTS];
 
         if (this.xCards[0] !== undefined) {
-          this.swapCards(currentPl, otherPl);
+          this.swapCards(currentPl, this.otherPl);
           this.endTurn();
         }
 
       } else if (this.spy === 1) {
         this.spy = 2;
-        otherPl.cards[i-CARD_SLOTS].flip();
+        this.spyCard = i;
+        this.otherPl.cards[i%CARD_SLOTS].flip();
 
-        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].label});
+        currentPl.view.updatePlayers(this.players);
 
       } else if (this.spy === 2) {
+        if (this.spyCard !== i) return;
         this.spy = 0;
-        otherPl.cards[i-CARD_SLOTS].flip();
+        this.otherPl.cards[i%CARD_SLOTS].flip();
 
-        currentPl.socket.emit('game_event', {i: i, label: otherPl.cards[i-CARD_SLOTS].label});
+        currentPl.view.updatePlayers(this.players);
 
         this.endTurn();
       }
@@ -488,13 +473,10 @@ exports.Game = class Game {
     let i0 = p0.cards.indexOf(this.xCards[0]);
     let i1 = p1.cards.indexOf(this.xCards[1]);
     
-    p1.cards[i1] = this.xCards[0];
-    p0.cards[i0] = this.xCards[1];
+    p1.cards[i1] = this.xCards[0].touch();
+    p0.cards[i0] = this.xCards[1].touch();
 
-    p1.socket.emit('game_event', {i: i1, label: 'Cx'});
-    p1.socket.emit('game_event', {i: i0+CARD_SLOTS, label: 'Cx'});
-    p0.socket.emit('game_event', {i: i0, label: 'Cx'});
-    p0.socket.emit('game_event', {i: i1+CARD_SLOTS, label: 'Cx'});
+    this.viewsUpdateAll();
 
     this.swap = false;
     this.xCards = [];

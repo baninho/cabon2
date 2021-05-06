@@ -1,3 +1,5 @@
+const BoardView = require('./BoardView');
+
 module.exports = class Player {
   constructor(id, name, cards, socket) {
     this.id = id;
@@ -6,5 +8,6 @@ module.exports = class Player {
     this.cards = cards;
     this.score = 0;
     this.socket = socket;
+    this.view = new BoardView(this);
   }
 }
