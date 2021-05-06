@@ -39,9 +39,9 @@ exports.Game = class Game {
       for (let i=0;i<STARTING_CARDS;i++) {
         p.cards[i] = this.stacks.main.pop();
       }
-
-      p.view.updateAll(this.players, this.stacks);
     }
+
+    this.viewsUpdateAll();
     this.setState(GameState.NOT_STARTED);
     this.isStackFlipped = false;
     this.isDiscardStackTapped = false;
@@ -51,19 +51,10 @@ exports.Game = class Game {
     this.spy = 0;
     this.swap = false;
     this.xCards = [];
+  }
 
-    for (let p of this.players) {
-      console.log(p.cards);
-      for (let i=0;i<CARD_SLOTS;i++) {
-        p.socket.emit('game_event', {i: i, label: p.cards[i] !== null ? p.cards[i].label : null});
-        p.socket.to(this.id).emit('game_event', {i: i+CARD_SLOTS, label: p.cards[i] !== null ? p.cards[i].label : null});
-      }
-      p.socket.emit('game_event', {i: DRAW_IND, label: 'C'});
-      p.socket.emit('game_event', {
-        i: DISCARD_IND, 
-        label: this.stacks.discard[this.stacks.discard.length-1].label,
-      });
-    }
+  viewsUpdateAll() {
+    for (let p of this.players) p.view.updateAll(this.players, this.stacks);
   }
 
   addNewPlayer(p) {
@@ -76,7 +67,7 @@ exports.Game = class Game {
     this.players.push(p);
     this.scores.push(0);
 
-    p.view.updateAll(this.players, this.stacks);
+    this.viewsUpdateAll();
   }
 
   newGame() {
@@ -113,9 +104,9 @@ exports.Game = class Game {
           if (c !== null && c.isFaceUp()) c.flip();
         }
       }
-      
-      for (let p of this.players) p.view.updateAll(this.players, this.stacks);
     }
+
+    this.viewsUpdateAll();
 
     return true;
   }
@@ -281,9 +272,9 @@ exports.Game = class Game {
       for (let c of p.cards) {
         if (c !== null && !c.isFaceUp()) c.flip();
       }
-
-      p.view.updatePlayers(this.players);
     }
+
+    for (let p of this.players) p.view.updatePlayers(this.players);
   }
 
   // all clicks on cards go through here
