@@ -114,7 +114,7 @@ class Board extends React.Component {
         <PlayerArea 
           cards = {this.props.playerCards[i]}
           onClick = {this.props.onClick}
-          playerNumber = {1}
+          playerNumber = {i}
         /></div>
       );
     }
