@@ -2,6 +2,9 @@
   "name": "cabon2",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "15.x"
+  },
   "scripts": {
     "start": "node index.js",
     "heroku-postbuild": "cd client && yarn && yarn run build",
