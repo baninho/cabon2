@@ -8,7 +8,7 @@ const { Server } = require("socket.io");
 const { is } = require('type-is');
 const io = new Server(server);
 
-const { Game } = require('./Game');
+const { Game, MAX_PLAYERS } = require('./Game');
 const Player = require('./Player');
 
 const games = [];
@@ -49,7 +49,7 @@ app.get('/game/:id', (req, res) => {
 
   let gameIds = games.map((game) => game.id);
 
-  if (gameIds.includes(req.params.id) && games[gameIds.indexOf(req.params.id)].players.length === 2) {
+  if (gameIds.includes(req.params.id) && games[gameIds.indexOf(req.params.id)].players.length >= MAX_PLAYERS) {
     res.send('Game is full');
   } else {
     res.sendFile(path.join(__dirname+'/client/build/index.html'));

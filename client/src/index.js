@@ -22,6 +22,7 @@ import Cx from './img/Cx.png'
 const DRAW_IND = 24;
 const DISCARD_IND = 25;
 const CARD_SLOTS = 6;
+const MAX_PLAYERS = 4;
 
 const GameState = Object.freeze({
   STATE_NOT_RECEIVED: 255,
@@ -36,7 +37,7 @@ const GameState = Object.freeze({
     1: '',
     2: 'Cabo!',
     3: 'Cabo!',
-    4: "Round's over - click NEXT to play the next",
+    4: "Round's over - click NEXT!",
   },
 });
 
@@ -105,15 +106,22 @@ class PlayerArea extends React.Component {
 class Board extends React.Component {
 
   render() {
+    let opponents = [];
+
+    for (let i=1;i<this.props.playerCards.length;i++) {
+      opponents.push(
+        <div key={'player' + i} className="board-area">{'Opponent ' + i}
+        <PlayerArea 
+          cards = {this.props.playerCards[i]}
+          onClick = {this.props.onClick}
+          playerNumber = {i}
+        /></div>
+      );
+    }
 
     return (
       <div>
-        <div className="board-area">Opponent
-        <PlayerArea 
-          cards = {this.props.playerCards[1]}
-          onClick = {this.props.onClick}
-          playerNumber = {1}
-        /></div>
+        {opponents}
         <div className="board-area">Stack
         <Stack 
           cards = {this.props.stackCards}
@@ -139,6 +147,9 @@ class Game extends React.Component {
       playerCards: [
         Array(6).fill(nullCard),
         Array(6).fill(nullCard),
+        Array(6).fill(nullCard),
+        Array(6).fill(nullCard),
+        Array(6).fill(nullCard),
       ],
       stackCards: [
         nullCard,
@@ -152,6 +163,7 @@ class Game extends React.Component {
       },
       turn: '',
       caboButtonClass: 'control',
+      playerCount: 2,
     };
   }
 
@@ -259,13 +271,16 @@ class Game extends React.Component {
       this.setState({
         playerCards: playerCards,
         stackCards: stackCards,
+        playerCount: data.playerCount,
       });
     });
 
-    for (let i=0;i<CARD_SLOTS;i++) {
-      playerCards[0][i] = new CardData(i<4 ? C : null);
-      playerCards[1][i] = new CardData(i<4 ? C : null);
+    for (let j=0;j<MAX_PLAYERS;j++) {
+      for (let i=0;i<CARD_SLOTS;i++) {
+        playerCards[j][i] = new CardData(i<4 ? C : null);
+      }
     }
+    
 
     stackCards[0] = new CardData(C);
     stackCards[1] = new CardData(C);
@@ -282,10 +297,12 @@ class Game extends React.Component {
     return (
       <div className="game">
         <div className="game-info">
-          <div><button className={this.state.turn === '' ? this.state.caboButtonClass + ' btn-inactive' : this.state.caboButtonClass} 
-            onClick={this.caboButton}>
-            CABO
-          </button>
+          <div>
+            <button 
+              className={this.state.turn === '' ? this.state.caboButtonClass + ' btn-inactive' : this.state.caboButtonClass} 
+              onClick={this.caboButton}>
+              CABO
+            </button>
           <button 
             className={this.state.gameState === GameState.FINISHED ? 'control' : 'control btn-inactive'} 
             onClick={this.startButton}>
@@ -298,7 +315,7 @@ class Game extends React.Component {
         </div>
         <div className="game-board">
           <Board 
-            playerCards = {this.state.playerCards}
+            playerCards = {this.state.playerCards.slice(0, this.state.playerCount)}
             stackCards = {this.state.stackCards}
             onClick = {(i) => this.handleClick(i)}
           />
