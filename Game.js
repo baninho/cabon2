@@ -281,9 +281,9 @@ exports.Game = class Game {
 
   getOtherPlayer(currentPl, i) {
     let playersCp = this.players.slice();
-    let playersSplice = playersCp.splice(playersCp.indexOf(currentPl), 1);
+    let curPlSplice = playersCp.splice(playersCp.indexOf(currentPl), 1);
 
-    playersCp = playersSplice.concat(playersCp);
+    playersCp = curPlSplice.concat(playersCp);
 
     return playersCp[Math.floor(i/CARD_SLOTS)];
   }
@@ -317,6 +317,7 @@ exports.Game = class Game {
       if (currentPl.cards[i] === null) return;
 
       if (this.swap) {
+        if (currentPl.cards[i] === null) return;
         // If a Swap was discarded, this will select the card to swap with
         // an opponents card; if an opponents card was already selected swaps them now
         if (this.xCards[0] === undefined){
@@ -442,6 +443,8 @@ exports.Game = class Game {
       this.otherPlInd = this.players.indexOf(this.otherPl);
 
       if (this.swap && this.xCards[1] === undefined) {
+        if (this.otherPl.cards[i%CARD_SLOTS] === null) return;
+
         this.xCards[1] = this.otherPl.cards[i%CARD_SLOTS];
 
         if (this.xCards[0] !== undefined) {
@@ -450,6 +453,7 @@ exports.Game = class Game {
         }
 
       } else if (this.spy === 1) {
+        if (this.otherPl.cards[i%CARD_SLOTS] === null) return;
         this.spy = 2;
         this.spyCard = i;
         this.otherPl.cards[i%CARD_SLOTS].flip();
