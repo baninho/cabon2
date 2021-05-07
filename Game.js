@@ -5,6 +5,7 @@ const DRAW_IND = 24;
 const DISCARD_IND = 25;
 const CARD_SLOTS = 6;
 const STARTING_CARDS = 4;
+const MAX_PLAYERS = 4;
 
 exports.Game = class Game {
   otherPl;
@@ -487,3 +488,4 @@ exports.DRAW_IND = DRAW_IND;
 exports.DISCARD_IND = DISCARD_IND;
 exports.CARD_SLOTS = CARD_SLOTS;
 exports.STARTING_CARDS = STARTING_CARDS;
+exports.MAX_PLAYERS = MAX_PLAYERS;
