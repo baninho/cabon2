@@ -37,7 +37,7 @@ const GameState = Object.freeze({
     1: '',
     2: 'Cabo!',
     3: 'Cabo!',
-    4: "Round's over - click NEXT to play the next",
+    4: "Round's over - click NEXT!",
   },
 });
 
