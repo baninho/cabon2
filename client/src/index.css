@@ -113,6 +113,6 @@ ol, ul {
 .board-area {
   display: flex;
   flex-direction: column;
-  margin-top: 15px;
+  margin-top: 8px;
   align-self: center;
 }
