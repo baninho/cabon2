@@ -99,6 +99,10 @@ ol, ul {
   width: 380px;
 }
 
+.game-id {
+  margin-top: 5px;
+}
+
 .game-board {
   display: flex;
   flex-direction: row;

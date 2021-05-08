@@ -1,7 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { io } from 'socket.io-client';
+import path from 'path';
+
 import './index.css';
+
 import C from './img/C.png';
 import C0 from './img/C0.png';
 import C1 from './img/C1.png';
@@ -312,6 +315,7 @@ class Game extends React.Component {
           <div>{GameState.name[this.state.gameState]} - {this.state.turn}</div><div>Scores:
           Yours: {this.state.score.yours} - Opponent's: {this.state.score.theirs[0]} - 
           {this.state.score.theirs[1]} - {this.state.score.theirs[2]}</div>
+          <div className="game-id">{'Game ID: ' + path.basename(window.location.href)}</div>
         </div>
         <div className="game-board">
           <Board 
