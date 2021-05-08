@@ -44,6 +44,17 @@ Object.defineProperty(Array.prototype, 'sum', {
 });
 
 
+app.get('/game/', (req, res) => {
+  console.log('routing through /game/ id: ' + req.query.game_id);
+  if (req.query.game_id) res.redirect('/game/' + req.query.game_id);
+  else res.redirect('/');
+});
+
+app.get('/game/new/', (req, res) => {
+  console.log('routing through /game/new');
+  res.redirect('/game/' + Math.random());
+});
+
 app.get('/game/:id', (req, res) => {
   console.log('routing through game/id ' + req.params.id);
 
@@ -56,14 +67,9 @@ app.get('/game/:id', (req, res) => {
   }
 });
 
-app.get('/game/', (req, res) => {
-  console.log('routing through /game/');
-  res.redirect('/game/' + Math.random());
-});
-
 app.get('/', (req, res) => {
   console.log('routing through /');
-  res.render('index', { title: 'Cabon' });
+  res.render('index', { title: 'Cabon', game_id: '' });
 });
 
 // add player to game when they connect

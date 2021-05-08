@@ -1,8 +1,21 @@
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-color:rgba(0, 128, 0, 0.212);
+}
+
+button {
+  background-color: white;
+  border: 1px solid #000;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: bold;
 }
 
 a {
   color: #00B7FF;
+}
+
+.bold {
+  font-weight: bold;
 }
