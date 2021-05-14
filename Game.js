@@ -143,14 +143,12 @@ exports.Game = class Game {
       if (c.value == 11 || c.value == 12) this.swap = true;
     }
 
-    for (let p of this.players) p.socket.emit('game_event', {
-      i: DRAW_IND, label: this.stacks.main[this.stacks.main.length-1].label
-    });
+    for (let p of this.players) p.view.updateStacks(this.stacks);
   }
 
   discardCard(c) {
     this.stacks.discard.push(c);
-    for (let p of this.players) p.socket.emit('game_event', {i: DISCARD_IND, label: c.label});
+    for (let p of this.players) p.view.updateStacks(this.stacks);
   }
 
   penaltyDraw(p) {
