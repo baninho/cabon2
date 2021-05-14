@@ -11,7 +11,7 @@ const io = new Server(server);
 const { Game, MAX_PLAYERS } = require('./Game');
 const Player = require('./Player');
 
-const games = [];
+const games = new Map();
 
 // Serve static files from the React app
 app.use('/static', express.static(path.join(__dirname, 'client/build/static')));
@@ -58,9 +58,7 @@ app.get('/game/new/', (req, res) => {
 app.get('/game/:id', (req, res) => {
   console.log('routing through game/id ' + req.params.id);
 
-  let gameIds = games.map((game) => game.id);
-
-  if (gameIds.includes(req.params.id) && games[gameIds.indexOf(req.params.id)].players.length >= MAX_PLAYERS) {
+  if (games.has(req.params.id) && games.get(req.params.id).players.length >= MAX_PLAYERS) {
     res.send('Game is full');
   } else {
     res.sendFile(path.join(__dirname+'/client/build/index.html'));
@@ -77,7 +75,6 @@ io.on('connection', (socket) => {
   console.log('a user connected with sid ' + socket.id);
 
   let game;
-  let gameIds = games.map((game) => game.id);
 
   socket.on('url', (data) => {
     
@@ -86,13 +83,12 @@ io.on('connection', (socket) => {
 
     console.log(gameId);
 
-    if (!gameIds.includes(gameId)) {
+    if (!games.has(gameId)) {
       console.log('pushing game id ' + gameId);
-      games.push(new Game(gameId));
-      gameIds = games.map((game) => {return game.id});
+      games.set(gameId, new Game(gameId));
     }
   
-    game = games[gameIds.indexOf(gameId)];
+    game = games.get(gameId);
     p = new Player(socket.id, socket.id, [], socket);
     game.addNewPlayer(p);
     socket.join(game.id);
@@ -154,7 +150,7 @@ io.on('connection', (socket) => {
       }
     }
 
-    if (game.players.length === 0) games.splice(games.indexOf(game), 1);
+    if (game.players.length === 0) games.delete(game.id);
   });
 });
 
