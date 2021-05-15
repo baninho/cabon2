@@ -206,8 +206,15 @@ exports.Game = class Game {
     let caboLost = false;
 
     for (let p of this.players) {
+      p.score = 0;
+
       for (let c of p.cards) {
         if (c !== null)  p.score += c.value;
+      }
+
+      if (p.score === 50) {
+        this.scores = this.scores.map((s, i) => {return i === this.players.indexOf(p) ? s : s+50});
+        return;
       }
 
       if (this.caboCaller === this.players.indexOf(p)) cabo = p.score;
@@ -224,7 +231,6 @@ exports.Game = class Game {
     for (let p of this.players) {
       if (min === p.score && caboLost) p.score = 0;
       this.scores[this.players.indexOf(p)] += p.score;
-      p.score = 0;
     }
   }
 

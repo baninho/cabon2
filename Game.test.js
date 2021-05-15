@@ -47,3 +47,18 @@ it('Game.discardCard() will cause the corresponding change in all players views'
   game.discardCard(c);
   expect(game.players[0].view.getLabels()[DISCARD_IND]).toBe(c.value);
 });
+
+it(`calculateScore for "Kamikaze": If a player has the cards 12, 12, 13, 13 they will receive 0 points 
+while everyone else receives 50 points`, () => {
+  let cards = [new Card(12), new Card(12), new Card(13), new Card(13)];
+  let kp = new Player('_', '_', cards, socket);
+  game.addNewPlayer(kp);
+  kp.cards = cards;
+  let kpIndex = game.players.indexOf(kp);
+  let scores = game.scores.map(s => s+50);
+  scores[kpIndex] -= 50;
+  game.calculateScores();
+  
+  expect(game.scores).toEqual(scores);
+
+});
