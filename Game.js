@@ -147,6 +147,7 @@ exports.Game = class Game {
   }
 
   discardCard(c) {
+    if (!c.isFaceUp()) c.flip();
     this.stacks.discard.push(c);
     for (let p of this.players) p.view.updateStacks(this.stacks);
   }
