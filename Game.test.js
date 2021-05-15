@@ -1,5 +1,21 @@
 const { it, expect } = require('@jest/globals');
-const { Game } = require('./Game');
+const { Game, DISCARD_IND } = require('./Game');
+const Card = require('./Card');
+const Player = require('./Player');
+const Client = require("socket.io-client");
+
+const socket = new Client('http://localhost:5000');
+
+let game;
+let gid = 'someGameid!';
+
+beforeEach(() => {
+  game = new Game(gid);
+  game.addNewPlayer(new Player())
+  const cards = [(new Card(13)).flip(), new Card(10).flip(), new Card(11).flip(), new Card(12).flip()];
+  const p = new Player('test_id', 'test_name', cards, socket);
+  game.addNewPlayer(p);
+});
 
 Object.defineProperty(Array.prototype, 'shuffle', {
   value: function() {
@@ -22,8 +38,12 @@ Object.defineProperty(Array.prototype, 'sum', {
 });
 
 it('new Game has a main stack of 51 cards and a discard stack of one card', () => {
-  let gid = 'someGameid!';
-
   expect(new Game(gid).stacks.main.length).toBe(51);
   expect(new Game(gid).stacks.discard.length).toBe(1);
+});
+
+it('Game.discardCard() will cause the corresponding change in all players views', () => {
+  let c = new Card(6);
+  game.discardCard(c);
+  expect(game.players[0].view.getLabels()[DISCARD_IND]).toBe(c.value);
 });
