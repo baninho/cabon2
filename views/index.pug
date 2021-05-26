@@ -3,13 +3,20 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
-  a(href='/game/new/') New Game
-  br
-  br
-  p.bold Join game 
-  form(action="/game", method="GET", autocomplete="off")
+  form(action="/game/new/", method="GET", autocomplete="off")
+    p
+      | Player name:
+      br
+      input(type="text", name="player_name" value=player_name)
+      br
+      br
+      p.bold Create new game
+    button(type="submit" name="new_game") New Game
+    br
+    br
+    p.bold Join game
     p
       | Game ID:
       br
       input(type="text", name="game_id" value=game_id)
-    button(type="submit") Join
+    button(type="submit" name="join" formaction="/game") Join
