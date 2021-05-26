@@ -7,6 +7,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const { is } = require('type-is');
 const io = new Server(server);
+const cookieParser = require('cookie-parser');
 
 const { Game, MAX_PLAYERS } = require('./Game');
 const Player = require('./Player');
@@ -18,6 +19,8 @@ app.use('/static', express.static(path.join(__dirname, 'client/build/static')));
 
 // And static files of the express part
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(cookieParser());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -45,12 +48,24 @@ Object.defineProperty(Array.prototype, 'sum', {
 
 
 app.get('/game/', (req, res) => {
+  let options = {
+    httpOnly: false,
+  };
+
+  res.cookie('name', req.query.player_name ? req.query.player_name : '', options);
+
   console.log('routing through /game/ id: ' + req.query.game_id);
   if (req.query.game_id) res.redirect('/game/' + req.query.game_id);
   else res.redirect('/');
 });
 
 app.get('/game/new/', (req, res) => {
+  let options = {
+    httpOnly: false,
+  };
+
+  res.cookie('name', req.query.player_name ? req.query.player_name : '', options);
+
   console.log('routing through /game/new');
   res.redirect('/game/' + Math.random());
 });
@@ -67,7 +82,7 @@ app.get('/game/:id', (req, res) => {
 
 app.get('/', (req, res) => {
   console.log('routing through /');
-  res.render('index', { title: 'Cabon', game_id: '' });
+  res.render('index', { title: 'Cabon', game_id: '', player_name: req.cookies['name'] ? req.cookies['name'] : ''});
 });
 
 // add player to game when they connect
@@ -81,7 +96,7 @@ io.on('connection', (socket) => {
     let gameId = path.basename(data.url);
     let p;
 
-    console.log(gameId);
+    console.log(data);
 
     if (!games.has(gameId)) {
       console.log('pushing game id ' + gameId);
@@ -89,7 +104,7 @@ io.on('connection', (socket) => {
     }
   
     game = games.get(gameId);
-    p = new Player(socket.id, socket.id, [], socket);
+    p = new Player(socket.id, data.name, [], socket);
     game.addNewPlayer(p);
     socket.join(game.id);
     socket.emit('game_state', {'state': game.gameState});
