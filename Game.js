@@ -238,14 +238,19 @@ exports.Game = class Game {
     // TODO: Adapt for more than two players
     for (let p of this.players) {
       let theirs = [];
+      let names = [];
 
       for (let q of this.players) {
-        if (p!==q) theirs.push(this.scores[this.players.indexOf(q)]);
+        if (p!==q) {
+          theirs.push(this.scores[this.players.indexOf(q)]);
+          names.push(p.name);
+        }
       }
 
       let data = {
         yours: this.scores[this.players.indexOf(p)],
         theirs: theirs,
+        names: names,
       };
 
       p.socket.emit('scores', data);
