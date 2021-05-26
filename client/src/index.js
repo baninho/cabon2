@@ -113,7 +113,7 @@ class Board extends React.Component {
 
     for (let i=1;i<this.props.playerCards.length;i++) {
       opponents.push(
-        <div key={'player' + i} className="board-area">{'Opponent ' + i}
+        <div key={'player' + i} className="board-area">{this.props.names[i]}
         <PlayerArea 
           cards = {this.props.playerCards[i]}
           onClick = {this.props.onClick}
@@ -130,7 +130,7 @@ class Board extends React.Component {
           cards = {this.props.stackCards}
           onClick = {this.props.onClick}
         /></div>
-        <div className="board-area">Your Cards
+        <div className="board-area">{this.props.names[0]}
         <PlayerArea 
           cards = {this.props.playerCards[0]}
           onClick = {this.props.onClick}
@@ -167,6 +167,7 @@ class Game extends React.Component {
       turn: '',
       caboButtonClass: 'control',
       playerCount: 2,
+      names: ['Player', 'Opponent'],
     };
   }
 
@@ -193,8 +194,20 @@ class Game extends React.Component {
     const stackCards = this.state.stackCards.slice();
 
     socket.on('connect', () => {
+      let playerName = 'Player';
+
+      if (document.cookie.split(';').some((item) => item.trim().startsWith('name='))) {
+        playerName = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('name='))
+          .split('=')[1];
+      }
+
+      this.setState({names: [playerName]});
+
       socket.emit('url', {
         url: window.location.href,
+        name: playerName,
       });
     });
 
@@ -232,20 +245,24 @@ class Game extends React.Component {
     });
 
     socket.on('scores', (data) => {
-      console.log('received game state');
+      console.log('received scores');
       console.log(data);
 
       let theirs = [];
+      let names = data.names.slice();
 
       for (let i=0;i<data.theirs.length;i++) {
-        theirs[i] = ('' + data.theirs[i]).padStart(5, '\u00a0');
+        theirs[i] = ('' + data.theirs[i]);
       }
+
+      names.unshift(this.state.names[0]);
 
       this.setState({
         score: {
           yours: data.yours,
           theirs: theirs,
         },
+        names: names,
       });
     });
 
@@ -296,6 +313,12 @@ class Game extends React.Component {
   }
 
   render() {
+    let scoreRows = [[<th>{this.state.names[0]}</th>], [<td>{this.state.score.yours}</td>]];
+    for (let i=0;i<this.state.score.theirs.length;i++) {
+      scoreRows[0].push(<th>{this.state.names[i+1]}</th>);
+      scoreRows[1].push(<th>{this.state.score.theirs[i]}</th>)
+    }
+    let scoresTable = <div><table><thead><tr>{scoreRows[0]}</tr></thead><tbody><tr>{scoreRows[1]}</tr></tbody></table></div>;
 
     return (
       <div className="game">
@@ -312,9 +335,7 @@ class Game extends React.Component {
             NEXT
           </button>
           <button className="control" onClick={this.newGameButton}>NEW</button></div>
-          <div>{GameState.name[this.state.gameState]} - {this.state.turn}</div><div>Scores:
-          Yours: {this.state.score.yours} - Opponent's: {this.state.score.theirs[0]} - 
-          {this.state.score.theirs[1]} - {this.state.score.theirs[2]}</div>
+          <div>{GameState.name[this.state.gameState]} - {this.state.turn}</div>{scoresTable}
           <div className="game-id">{'Game ID: ' + path.basename(window.location.href)}</div>
         </div>
         <div className="game-board">
@@ -322,6 +343,7 @@ class Game extends React.Component {
             playerCards = {this.state.playerCards.slice(0, this.state.playerCount)}
             stackCards = {this.state.stackCards}
             onClick = {(i) => this.handleClick(i)}
+            names = {this.state.names}
           />
         </div>
       </div>
