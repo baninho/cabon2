@@ -24,5 +24,6 @@ a {
 
 .main-container {
   max-width: 380px;
+  height: auto;
   align-self: center;
 }
