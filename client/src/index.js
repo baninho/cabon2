@@ -324,17 +324,28 @@ class Game extends React.Component {
       <div className="game">
         <div className="game-info">
           <div>
+            <table className="tab-buttons">
+            <tr>
+            <th className="tab-buttons">
             <button 
               className={this.state.turn === '' ? this.state.caboButtonClass + ' btn-inactive' : this.state.caboButtonClass} 
               onClick={this.caboButton}>
               CABO
             </button>
-          <button 
-            className={this.state.gameState === GameState.FINISHED ? 'control' : 'control btn-inactive'} 
-            onClick={this.startButton}>
-            NEXT
-          </button>
-          <button className="control" onClick={this.newGameButton}>NEW</button></div>
+            </th>
+            <th className="tab-buttons">
+            <button 
+              className={this.state.gameState === GameState.FINISHED ? 'control' : 'control btn-inactive'} 
+              onClick={this.startButton}>
+              NEXT
+            </button>
+            </th>
+            <th className="tab-buttons">
+            <button className="control" onClick={this.newGameButton}>NEW</button>
+            </th>
+            </tr>
+            </table>
+          </div>
           <div>{GameState.name[this.state.gameState]} - {this.state.turn}</div>{scoresTable}
           <div className="game-id">{'Game ID: ' + path.basename(window.location.href)}</div>
         </div>
