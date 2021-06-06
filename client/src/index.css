@@ -113,7 +113,6 @@ ol, ul {
   display: flex;
   flex-direction: column;
   align-self: center;
-  margin-left: 30px;
   max-width: 360px;
 }
 
