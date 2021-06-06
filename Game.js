@@ -243,7 +243,7 @@ exports.Game = class Game {
       for (let q of this.players) {
         if (p!==q) {
           theirs.push(this.scores[this.players.indexOf(q)]);
-          names.push(p.name);
+          names.push(q.name);
         }
       }
 
