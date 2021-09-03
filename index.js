@@ -1,11 +1,11 @@
 const express = require('express');
 const path = require('path');
+const uuid = require('uuid');
 
 const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
-const { is } = require('type-is');
 const io = new Server(server);
 const cookieParser = require('cookie-parser');
 
@@ -67,7 +67,7 @@ app.get('/game/new/', (req, res) => {
   res.cookie('name', req.query.player_name ? req.query.player_name : '', options);
 
   console.log('routing through /game/new');
-  res.redirect('/game/' + Math.random());
+  res.redirect('/game/' + uuid.v4());
 });
 
 app.get('/game/:id', (req, res) => {
