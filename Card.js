@@ -2,6 +2,7 @@ module.exports = class Card {
   constructor(value) {
     this.value = value;
     this.label = 'C';
+    this.actionable = false;
   }
 
   flip() {
