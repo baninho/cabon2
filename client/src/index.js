@@ -45,12 +45,26 @@ const GameState = Object.freeze({
 });
 
 function Card (props) {
+  let labels
+  let img
+  let classString = 'square'
+
+  if (props.label) {
+    console.log(props.label)
+    labels = props.label.toString().split(' ')
+    img = imgFromLabel(labels[0])
+  
+    if (labels.length > 1) {
+      classString += ' glow'
+    }  
+  } else img = null
+  
   return (
     <button 
-      className="square" 
+      className={classString}
       onClick={props.onClick}
     >
-      <img src={props.label} alt=""></img>
+      <img src={img} alt=""></img>
     </button>
     );
 }
@@ -216,16 +230,15 @@ class Game extends React.Component {
       console.log(data);
       const playerCards = this.state.playerCards.slice();
       const stackCards = this.state.stackCards.slice();
-      let img = imgFromLabel(data.label);
 
       if (data.i < CARD_SLOTS) {
-        playerCards[0][data.i].label = img;
+        playerCards[0][data.i].label = data.label;
       } else if (data.i < DRAW_IND) {
-        playerCards[1][data.i-CARD_SLOTS].label = img;
+        playerCards[1][data.i-CARD_SLOTS].label = data.label;
       } else if (data.i === DRAW_IND) {
-        stackCards[0].label = img;
+        stackCards[0].label = data.label;
       } else if (data.i === DISCARD_IND) {
-        stackCards[1].label = img;
+        stackCards[1].label = data.label;
       }
 
       this.setState({
@@ -277,16 +290,17 @@ class Game extends React.Component {
     });
 
     socket.on('boardView', (data) => {
+      console.log('received boardView')
       console.log(data);
       let pInd;
 
       for (let i=0;i<data.playerCount*CARD_SLOTS;i++) {
         pInd = Math.floor(i/CARD_SLOTS);
-        playerCards[pInd][i-pInd*CARD_SLOTS].label = imgFromLabel(data.labels[i]);
+        playerCards[pInd][i-pInd*CARD_SLOTS].label = data.labels[i];
       }
 
-      stackCards[0].label = imgFromLabel(data.labels[DRAW_IND]);
-      stackCards[1].label = imgFromLabel(data.labels[DISCARD_IND]);
+      stackCards[0].label = data.labels[DRAW_IND];
+      stackCards[1].label = data.labels[DISCARD_IND];
 
       this.setState({
         playerCards: playerCards,
@@ -366,20 +380,20 @@ function imgFromLabel(label) {
   switch (label) {
     case ('C'): return C;
     case ('Cx'): return Cx;
-    case (0): return C0;
-    case (1): return C1;
-    case (2): return C2;
-    case (3): return C3;
-    case (4): return C4;
-    case (5): return C5;
-    case (6): return C6;
-    case (7): return C7;
-    case (8): return C8;
-    case (9): return C9;
-    case (10): return C10;
-    case (11): return C11;
-    case (12): return C12;
-    case (13): return C13;
+    case ('0'): return C0;
+    case ('1'): return C1;
+    case ('2'): return C2;
+    case ('3'): return C3;
+    case ('4'): return C4;
+    case ('5'): return C5;
+    case ('6'): return C6;
+    case ('7'): return C7;
+    case ('8'): return C8;
+    case ('9'): return C9;
+    case ('10'): return C10;
+    case ('11'): return C11;
+    case ('12'): return C12;
+    case ('13'): return C13;
     default: return null;
   }
 }
