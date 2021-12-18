@@ -306,7 +306,6 @@ exports.Game = class Game {
 
     let currentPl;
     let isActivePlayer;
-    let card;
 
     for (let p of this.players) {
       if (p.id === socket.id) currentPl = p;
@@ -382,7 +381,7 @@ exports.Game = class Game {
       if (!this.startGame()) return;
 
       this.isStackFlipped = true;
-      card = this.stacks.main[this.stacks.main.length -1].flip();
+      let card = this.stacks.main[this.stacks.main.length -1].flip();
 
       if (card.value == 7 || card.value == 8) this.peek = true;
 
