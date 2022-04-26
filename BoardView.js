@@ -11,11 +11,6 @@ module.exports = class BoardView {
     this.#parent = parent;
   }
 
-  updateLabel(i, label) {
-    labels[i] = label;
-    this.#wasUpdated = true;
-  }
-
   updatePlayer(player, playerInd) {
     player.cards.forEach((c, i) => {
       this.#setLabel(i + playerInd*CARD_SLOTS, c);
@@ -57,6 +52,8 @@ module.exports = class BoardView {
   }
 
   #setLabel(index, card) {
-    this.#labels[index] = card === undefined || card === null ? '' : card.label;
+    let label = card === undefined || card === null ? '' : card.label.toString();
+    if (card && card.actionable) label += ' glow'
+    this.#labels[index] = label
   }
 }
