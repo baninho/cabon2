@@ -8,7 +8,8 @@
   "scripts": {
     "start": "node index.js",
     "heroku-postbuild": "cd client && yarn && yarn run build",
-    "test": "jest"
+    "test": "jest",
+    "dev": "yarn run heroku-postbuild && yarn run start"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
